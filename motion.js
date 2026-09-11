@@ -4,7 +4,7 @@
 'use strict';
 (() => {
   if (window.PTR_MOTION || !document.querySelector('.hero')) return;
-  const VERSION = '5.0.2', TAU = Math.PI * 2;
+  const VERSION = '5.0.3', TAU = Math.PI * 2;
   const coarse = matchMedia('(pointer: coarse)');
   const interactive = 'a,button,input,select,textarea,dialog,summary,[role="tab"]';
   const scenes=[],cleanups=[];

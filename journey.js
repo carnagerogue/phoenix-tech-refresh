@@ -7,7 +7,7 @@
   const root=document.documentElement,nav=document.querySelector('.journey-nav');
   const opening=document.querySelector('.opening-sequence'),hero=opening?.querySelector('.hero');
   if(!nav||!hero)return;
-  const VERSION='5.0.2',TAU=Math.PI*2;
+  const VERSION='5.0.3',TAU=Math.PI*2;
   const compact=matchMedia('(max-width: 760px)');
   const interactive='a,button,input,select,textarea,summary,dialog';
   const pauseButton=nav.querySelector('.journey-pause'),links=[...nav.querySelectorAll('.journey-chapters a')];
@@ -178,7 +178,7 @@
     const travel=steady||compact.matches?0:smooth(.17,1,intro);
     opening.style.setProperty('--departure-y',`${-travel*80}px`);
     opening.style.setProperty('--departure-opacity',1-smooth(.18,.87,intro));
-    opening.style.setProperty('--galaxy-opacity',1-smooth(.76,1,intro));
+    opening.style.setProperty('--galaxy-opacity',1-smooth(.76,1,intro)*.55);
     window.PTR_MOTION?.setCamera(travel);
     for(const s of scenes){
       const range=s.height-s.h;

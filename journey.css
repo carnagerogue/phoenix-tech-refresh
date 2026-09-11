@@ -4,6 +4,7 @@
 .cinema-ready .opening-sequence{height:calc(var(--opening-height,830px) + 62svh)}
 .cinema-ready .opening-sequence>.hero{position:sticky;top:0}
 .opening-sequence .hero-copy{translate:0 var(--departure-y,0px);opacity:var(--departure-opacity,1)}
+.opening-sequence .hero-grid{opacity:var(--departure-opacity,1)}
 .opening-sequence .ambient-canvas{opacity:var(--galaxy-opacity,1)}
 .opening-sequence .hero-bottom{opacity:var(--departure-opacity,1)}
 .hero-journey-entry{position:absolute;z-index:3;left:max(56px,calc((100% - 1424px)/2));bottom:144px;display:flex;align-items:center;gap:18px;font-size:10px;color:#bbd1c8;letter-spacing:.03em;opacity:var(--departure-opacity,1)}
@@ -53,6 +54,7 @@
 body:has(dialog[open]) .journey-nav,body:has(.cookie-banner:not([hidden])) .journey-nav{visibility:hidden;pointer-events:none}
 [data-ambient-motion=paused] .journey-copy,[data-ambient-motion=paused] .opening-sequence .hero-copy,[data-ambient-motion=paused] .opening-sequence .hero-bottom{translate:none;opacity:1}
 [data-ambient-motion=paused] .opening-sequence .ambient-canvas{opacity:1}
+[data-ambient-motion=paused] .opening-sequence .hero-grid{opacity:1}
 @media(min-width:1800px){.cinema-layout{padding-top:0}.journey-copy h2{font-size:118px}.journey-copy p{font-size:19px}.cinema-renew .reuse-copy h2{font-size:110px}}
 @media(max-width:1100px){.journey-copy{width:56%}.journey-copy h2{font-size:7.2vw}.journey-copy p{font-size:15px;max-width:450px}.chapter-label{margin-bottom:27px}.journey-copy .text-link{font-size:13px}.cinema-renew .reuse-copy{padding-left:36px;padding-right:36px}.journey-nav{padding-left:36px;padding-right:36px;gap:22px}.journey-scroll-cue{font-size:9px;gap:10px}.journey-chapters{width:60vw}.cinema-renew .reuse-copy h2{font-size:7vw}.cinema-renew .reuse-steps{max-width:650px}}
 @media(max-width:760px){
