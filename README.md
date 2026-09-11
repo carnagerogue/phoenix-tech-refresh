@@ -16,6 +16,15 @@ Corporate website and future client portal for **Phoenix Tech Refresh**, an ente
 
 The visual identity and homepage design are still being refined. Production frontend implementation will begin after the design direction is approved.
 
+## Project documentation
+
+- [Project Brief](docs/PROJECT_BRIEF.md)
+- [Information Architecture](docs/INFORMATION_ARCHITECTURE.md)
+- [Technical Architecture](docs/TECHNICAL_ARCHITECTURE.md)
+- [Design Direction](docs/DESIGN_DIRECTION.md)
+- [Content & Asset Inputs](docs/CONTENT_INPUTS.md)
+- [Development Roadmap](docs/ROADMAP.md)
+
 ## Planned platform
 
 - Next.js + React + TypeScript
