@@ -14,7 +14,7 @@ parser.add_argument('--output', required=True)
 parser.add_argument('--wait-for-publish', action='store_true')
 args = parser.parse_args()
 out = Path(args.output); out.mkdir(parents=True, exist_ok=True)
-VERSION = '4.0.0'
+VERSION = '4.1.0'
 checks = []
 def check(name, condition):
     checks.append({'name': name, 'passed': bool(condition)})
@@ -70,10 +70,14 @@ with sync_playwright() as p:
         check('Animation frames advance', status()['frames'] > a)
         check('Actual canvas pixels change', digest() != pixels)
         check('Animation running', status()['running'])
-        origin=status()['scenes'][0]['driftSample']
-        page.wait_for_timeout(2000)
-        distance=math.dist(origin,status()['scenes'][0]['driftSample'])
-        check('Logo particles move slowly without input', .25 < distance < 16)
+        # Idle travel must be perceptible in a short visit, while staying gentle.
+        # Sum the path so a natural change of direction cannot cancel movement.
+        origin=status()['scenes'][0]['driftSample']; distance=0
+        for _ in range(4):
+            page.wait_for_timeout(500)
+            current=status()['scenes'][0]['driftSample']
+            distance+=math.dist(origin,current); origin=current
+        check('Logo visibly drifts without input', 3 < distance < 70)
         check('Logo pixels loaded from the real mark', status()['logoPoints'] > 1000 and status()['shape'] == 'logo-pixels')
         visual=page.locator('.hero-visual').bounding_box()
         height=visual['height']-35
@@ -139,7 +143,7 @@ with sync_playwright() as p:
         page.evaluate('PTR_MOTION.pause()');page.screenshot(path=str(out/'full-page.png'),full_page=True)
         mobile=browser.new_context(viewport={'width':390,'height':844},is_mobile=True,has_touch=True,device_scale_factor=1,reduced_motion='reduce')
         phone=mobile.new_page();phone.on('pageerror', lambda e: errors.append(str(e)))
-        load(phone);phone.wait_for_function('window.PTR_MOTION?.version === "4.0.0" && PTR_MOTION.status.logoPoints > 1000')
+        load(phone);phone.wait_for_function('(version) => window.PTR_MOTION?.version === version && PTR_MOTION.status.logoPoints > 1000', arg=VERSION)
         if phone.locator('#reject-cookies').is_visible():phone.locator('#reject-cookies').click()
         phone.wait_for_timeout(150)
         check('Initial reduced-motion mobile load autoplays', phone.evaluate('PTR_MOTION.status.running'))

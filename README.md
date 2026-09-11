@@ -36,7 +36,7 @@ The new hardware, architectural, and environmental images are AI-generated illus
 - Local-only project summary with validation; email draft opens only on user action.
 - Working privacy preferences, no installed analytics or advertising vendors.
 - Privacy, Terms of Use, Cookie Policy, and Accessibility review drafts.
-- Animated galaxy of silver and teal star particles sampled from the approved logo, with slow flowing trajectories, soft halos, depth, and nebula light. Mouse/touch scatters the pixels, which spring back into the mark. Autoplay starts on every load, including reduced-motion browsers; manual pause and offscreen/dialog/hidden-tab suspension remain available.
+- Animated galaxy of silver and teal star particles sampled from the approved logo. Continuous idle motion combines a gentle breathing and floating mark, traveling light, circulating stardust, and precessing orbits with luminous trails. Mouse/touch scatters the pixels, which spring back into the moving mark. Autoplay starts on every load, including reduced-motion browsers; manual pause and offscreen/dialog/hidden-tab suspension remain available.
 
 ## Scope and launch gates
 

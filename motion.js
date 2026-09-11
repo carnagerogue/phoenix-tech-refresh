@@ -4,7 +4,7 @@
 'use strict';
 (() => {
   if (window.PTR_MOTION || !document.querySelector('.hero')) return;
-  const VERSION = '4.0.0', TAU = Math.PI * 2;
+  const VERSION = '4.1.0', TAU = Math.PI * 2;
   const coarse = matchMedia('(pointer: coarse)');
   const interactive = 'a,button,input,select,textarea,dialog,summary,[role="tab"]';
   const scenes=[],cleanups=[];
@@ -89,19 +89,21 @@
     if(s.failed||!s.w)return;
     const c=s.ctx,w=s.w,h=s.h,a=s.art,hero=s.kind==='hero';
     c.clearRect(0,0,w,h);
-    const pulse=.88+Math.sin(time*.27)*.12;
-    glow(c,a.x-w*.04,a.y,a.w*.92,a.h*.7,`rgba(22,72,82,${.25*pulse})`);
-    glow(c,a.x+a.w*.27,a.y+a.h*.16,a.w*.66,a.h*.52,'rgba(0,131,132,.21)');
-    glow(c,a.x-a.w*.24,a.y-a.h*.20,a.w*.50,a.h*.43,'rgba(62,87,128,.13)');
+    const breath=Math.sin(time*.72),pulse=.82+breath*.18;
+    const floatX=Math.sin(time*.36)*a.w*.025,floatY=Math.sin(time*.48)*a.w*.032;
+    const cx=a.x+floatX,cy=a.y+floatY;
+    glow(c,cx-w*.04,cy,a.w*(.96+breath*.06),a.h*.74,`rgba(22,72,82,${.33*pulse})`);
+    glow(c,cx+a.w*(.19+Math.sin(time*.29)*.12),cy+a.h*.12,a.w*.66,a.h*.52,`rgba(0,145,137,${.24+pulse*.08})`);
+    glow(c,cx-a.w*.24,cy-a.h*(.16+Math.cos(time*.31)*.07),a.w*.58,a.h*.49,'rgba(62,87,128,.20)');
     // Deep, slowly translating stars with only a few bright diffraction glints.
     // The foreground and distant layers travel at different speeds.
     c.save();c.globalCompositeOperation='lighter';
     for(let i=0;i<(s.compact?550:stars.length);i++){
-      const p=stars[i],x=(p.u*w+time*(.45+p.depth*2.1))%w;
-      const y=(p.v*h+time*(.12+p.depth*.35)+Math.sin(time*.07+p.phase)*3)%h;
+      const p=stars[i],x=(p.u*w+time*(1.1+p.depth*4.2))%w;
+      const y=(p.v*h+time*(.3+p.depth*.65)+Math.sin(time*.18+p.phase)*6)%h;
       const textSide=hero&&(s.compact?y<a.y-a.h*.48:x<w*.48);
       const edge=Math.min(1,x/30,(w-x)/30);
-      const alpha=(.32+p.depth*.45)*(.91+.09*Math.sin(time*.23+p.phase))*(textSide?.10:hero?.62:.22)*edge;
+      const alpha=(.32+p.depth*.45)*(.81+.19*Math.sin(time*.65+p.phase))*(textSide?.10:hero?.68:.22)*edge;
       const tone=p.tone>.95?3:p.tone>.76?1:0;
       const size=2+p.size*(p.depth>.9?3.4:1.5);
       star(c,x,y,size,alpha,tone);
@@ -118,35 +120,55 @@
     c.restore();
     if(hero){
       c.save();c.globalCompositeOperation='lighter';
-      // A diffuse, unhurried orbital layer puts air around the silhouette.
+      // Differential speeds keep the dust circulating like a current, with
+      // visible travel even when a visitor has not moved the pointer.
       for(let i=0;i<(s.compact?380:650);i++){
-        const p=dust[i],angle=p.angle+time*.012,r=p.radius;
+        const p=dust[i],speed=.055+.075*(1.3-p.radius),angle=p.angle+time*speed;
+        const r=p.radius+Math.sin(time*.35+p.phase)*.035;
         const xx=Math.cos(angle)*a.w*.75*r,yy=Math.sin(angle)*a.w*.40*r;
-        const x=a.x+xx*.94+yy*.34,y=a.y-xx*.34+yy*.94;
-        star(c,x,y,2+p.size*1.7,(.15+.13*Math.sin(p.phase+time*.14))*(1-r*.45),i%3?2:1);
+        const x=cx+xx*.94+yy*.34,y=cy-xx*.34+yy*.94;
+        const alpha=(.23+.12*Math.sin(p.phase+time*.55))*(1-r*.40);
+        if(i%19===0){
+          // Short, tapered wakes reveal the direction of travel.
+          for(let trail=5;trail>0;trail--){
+            const t=angle-trail*.013,tx=Math.cos(t)*a.w*.75*r,ty=Math.sin(t)*a.w*.40*r;
+            star(c,cx+tx*.94+ty*.34,cy-tx*.34+ty*.94,2+p.size,alpha*(1-trail/6)*.65,1);
+          }
+        }
+        star(c,x,y,2+p.size*1.9,alpha,i%3?2:1);
       }
-      // Two slow orbital paths frame the actual logo without spinning its silhouette.
+      // Precessing orbits and luminous wakes give the still page a clear rhythm.
       c.globalAlpha=1;
       for(let orbit=0;orbit<2;orbit++){
-        const rotation=orbit?-.58:-.32,rx=a.w*(orbit?.83:.76),ry=a.w*(orbit?.39:.58);
-        c.save();c.globalAlpha=1;c.translate(a.x,a.y);c.rotate(rotation);
-        c.strokeStyle=orbit?'rgba(101,227,193,.20)':'rgba(181,224,216,.33)';
+        const rotation=(orbit?-.58:-.32)+Math.sin(time*.24+orbit*2)*.10;
+        const rx=a.w*(orbit?.83:.76)*(1+breath*.014),ry=a.w*(orbit?.39:.58);
+        c.save();c.globalAlpha=1;c.translate(cx,cy);c.rotate(rotation);
+        c.strokeStyle=orbit?'rgba(101,227,193,.13)':'rgba(181,224,216,.21)';
         c.lineWidth=.65;c.beginPath();c.ellipse(0,0,rx,ry,0,0,TAU);c.stroke();
-        const angle=time*(orbit?-.025:.018)+(orbit?2.4:5.2);
-        star(c,Math.cos(angle)*rx,Math.sin(angle)*ry,orbit?13:19,.85,orbit?1:0);
+        const direction=orbit?-1:1,angle=time*(orbit?-.15:.19)+(orbit?2.4:5.2);
+        for(let trail=30;trail>0;trail--){
+          const tail=angle-direction*trail*.021,next=tail+direction*.023;
+          c.globalAlpha=(1-trail/31)*.62;
+          c.strokeStyle=orbit?'#65e3c1':'#c9e9f4';c.lineWidth=.7+(1-trail/31)*.7;
+          c.beginPath();c.ellipse(0,0,rx,ry,0,tail,next,direction<0);c.stroke();
+        }
+        star(c,Math.cos(angle)*rx,Math.sin(angle)*ry,orbit?19:24,.94,orbit?1:0);
         c.restore();
       }
-      const size=a.w,step=dt*60,radius=s.compact?72:110;
+      const size=a.w*(1+breath*.025),step=dt*60,radius=s.compact?72:110;
       let displacement=0,affected=0;
-      const yaw=Math.sin(time*.09)*.12,driftScale=size/355;
+      const yaw=Math.sin(time*.32)*.21,roll=Math.sin(time*.26)*.035,driftScale=size/355;
+      const cosRoll=Math.cos(roll),sinRoll=Math.sin(roll),cosYaw=Math.cos(yaw),sinYaw=Math.sin(yaw);
+      const lightBand=Math.sin(time*.43)*.8;
       for(const p of s.particles){
         // Continuous, slow trajectories through a coherent flow field. Each star
         // changes position, rather than just blinking on a fixed logo bitmap.
-        const phase=time*p.speed+p.phase;
-        const flowX=Math.sin(p.v*5+time*.16)*4+Math.cos(phase)*p.drift;
-        const flowY=Math.cos(p.u*5+time*.13)*3+Math.sin(phase+p.orbit)*p.drift*.8;
-        const bx=a.x+(p.u*Math.cos(yaw)+p.z*Math.sin(yaw))*size+flowX*driftScale;
-        const by=a.y+p.v*size+flowY*driftScale+Math.sin(time*.12)*3;
+        const phase=time*p.speed*2.1+p.phase;
+        const flowX=Math.sin(p.v*5+time*.52)*7+Math.cos(phase)*p.drift;
+        const flowY=Math.cos(p.u*5+time*.43)*5+Math.sin(phase+p.orbit)*p.drift;
+        const localX=(p.u*cosYaw+p.z*sinYaw)*size+flowX*driftScale;
+        const localY=p.v*size+flowY*driftScale;
+        const bx=cx+localX*cosRoll-localY*sinRoll,by=cy+localX*sinRoll+localY*cosRoll;
         if(p===s.particles[0])s.driftSample=[bx,by];
         if(dt){
           if(s.pointerActive){
@@ -157,10 +179,15 @@
           const damping=Math.pow(.86,step);p.vx*=damping;p.vy*=damping;p.dx+=p.vx*step;p.dy+=p.vy*step;
         }
         const offset=Math.hypot(p.dx,p.dy);displacement=Math.max(displacement,offset);
-        const alpha=p.light*(.91+.09*Math.sin(time*.20+p.phase));
+        // A broad traveling highlight moves through the mark like reflected light;
+        // it never switches the silhouette off or flashes the whole scene.
+        const bandDistance=(p.u*.55+p.v-lightBand)/.18;
+        const shimmer=Math.exp(-bandDistance*bandDistance);
+        const alpha=Math.min(1,p.light*(.73+.12*Math.sin(time*.6+p.phase)+shimmer*.42));
         const x=bx+p.dx,y=by+p.dy,pixel=(s.compact?3.5:4.2)*p.size;
         // Fine points form the mark; a sparse, defocused layer adds depth.
         star(c,x,y,p.depth>.92?pixel*2.2:pixel,alpha*(p.depth>.92?.5:1),offset>10?1:p.tone);
+        if(p.depth>.986)star(c,x,y,pixel*(3+shimmer*2),shimmer*.28,p.tone);
       }
       s.displacement=displacement;s.affected=affected;c.restore();
     }
