@@ -4,7 +4,7 @@
 'use strict';
 (() => {
   if (window.PTR_MOTION || !document.querySelector('.hero')) return;
-  const VERSION = '3.0.0', TAU = Math.PI * 2;
+  const VERSION = '3.1.0', TAU = Math.PI * 2;
   const coarse = matchMedia('(pointer: coarse)');
   const interactive = 'a,button,input,select,textarea,dialog,summary,[role="tab"]';
   const scenes=[],cleanups=[];
@@ -14,8 +14,18 @@
   // Deterministic positions prevent stars from jumping on resize.
   let seed=71421;
   const random=()=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296;};
-  const stars=Array.from({length:640},()=>({u:random(),v:random(),phase:random()*TAU,size:.5+random()*1.5,depth:random(),tone:random()}));
+  const stars=Array.from({length:1100},()=>({u:random(),v:random(),phase:random()*TAU,size:.5+random()*1.5,depth:random(),tone:random()}));
   const dust=Array.from({length:900},()=>({angle:random()*TAU,radius:.35+random()*.95,phase:random()*TAU,size:.55+random()*1.35}));
+  // Small cached light sprites give stars a fine core and a soft optical halo.
+  const palette=['210,228,249','83,222,208','153,178,218','220,194,166'];
+  const lights=palette.map(color=>{
+    const canvas=document.createElement('canvas');canvas.width=canvas.height=32;
+    const c=canvas.getContext('2d'),g=c.createRadialGradient(16,16,0,16,16,16);
+    g.addColorStop(0,`rgba(${color},1)`);g.addColorStop(.20,`rgba(${color},.95)`);
+    g.addColorStop(.42,`rgba(${color},.32)`);g.addColorStop(.70,`rgba(${color},.06)`);g.addColorStop(1,`rgba(${color},0)`);
+    c.fillStyle=g;c.fillRect(0,0,32,32);return canvas;
+  });
+  function star(c,x,y,size,alpha,tone=0){c.globalAlpha=alpha;c.drawImage(lights[tone],x-size*.5,y-size*.5,size,size);}
   function on(target,event,fn,options){target.addEventListener(event,fn,options);cleanups.push(()=>target.removeEventListener(event,fn,options));}
   const control=document.createElement('button');
   control.className='motion-control';control.type='button';
@@ -61,11 +71,16 @@
       const mask=document.createElement('canvas');mask.width=200;mask.height=Math.round(200*logo.naturalHeight/logo.naturalWidth);
       const ctx=mask.getContext('2d',{willReadFrequently:true});ctx.drawImage(logo,0,0,mask.width,mask.height);
       const data=ctx.getImageData(0,0,mask.width,mask.height).data;
-      for(let y=0;y<mask.height;y+=2)for(let x=0;x<mask.width;x+=2){
-        const i=(y*mask.width+x)*4,r=data[i],g=data[i+1],b=data[i+2];
+      // Random continuous positions avoid the stamped bitmap grid of the first version.
+      for(let attempt=0;attempt<40000&&logoPoints.length<3300;attempt++){
+        const x=random()*mask.width,y=random()*mask.height,i=(Math.floor(y)*mask.width+Math.floor(x))*4;
+        const r=data[i],g=data[i+1],b=data[i+2];
         if(data[i+3]<170||Math.max(r,g,b)<48)continue;
-        const teal=g>r*1.2&&b>r*1.1;
-        logoPoints.push({u:(x-mask.width/2)/mask.width,v:(y-mask.height/2)/mask.width,phase:random()*TAU,size:.7+random()*.65,light:.5+Math.max(r,g,b)/510,color:teal?'72,239,218':y<mask.height*.3?'207,229,255':'153,211,225'});
+        const teal=g>r*1.2&&b>r*1.1,depth=random();
+        logoPoints.push({u:(x-mask.width/2)/mask.width,v:(y-mask.height/2)/mask.width,
+          phase:random()*TAU,orbit:random()*TAU,depth,z:(random()-.5)*.22,
+          speed:.11+random()*.15,drift:3+random()*8,size:.6+random()*.65,
+          light:.55+random()*.35,tone:teal?1:depth>.84?2:0});
       }
       populate();
     }catch(error){console.warn('Phoenix Galaxy could not sample the logo.',error);scenes.forEach(s=>{s.host.dataset.motionError='logo';});}
@@ -78,29 +93,50 @@
     glow(c,a.x-w*.04,a.y,a.w*.92,a.h*.7,`rgba(51,32,115,${.32*pulse})`);
     glow(c,a.x+a.w*.27,a.y+a.h*.16,a.w*.66,a.h*.52,'rgba(0,131,132,.21)');
     glow(c,a.x-a.w*.24,a.y-a.h*.20,a.w*.50,a.h*.43,'rgba(62,87,168,.19)');
-    // Sparse drifting field across the scene; keep the text side deliberately quiet.
-    for(let i=0;i<(s.compact?300:stars.length);i++){
-      const p=stars[i],x=(p.u*w+time*(1+p.depth*3))%w,y=p.v*h+Math.sin(time*.18+p.phase)*5;
-      const alpha=(.24+.44*(.5+.5*Math.sin(time*(.6+p.depth)+p.phase)))*(hero&&x<w*.48?.23:hero?1:.42);
-      c.fillStyle=`rgba(${p.tone>.8?'153,138,239':p.tone>.5?'104,218,220':'210,228,255'},${alpha})`;
-      c.fillRect(x,y,p.size,p.size);
-      if(p.depth>.97){c.globalAlpha=alpha*.6;c.fillRect(x-2,y+.5,p.size+4,.6);c.fillRect(x+.5,y-2,.6,p.size+4);c.globalAlpha=1;}
+    // Deep, slowly translating stars with only a few bright diffraction glints.
+    // The foreground and distant layers travel at different speeds.
+    c.save();c.globalCompositeOperation='lighter';
+    for(let i=0;i<(s.compact?550:stars.length);i++){
+      const p=stars[i],x=(p.u*w+time*(.45+p.depth*2.1))%w;
+      const y=(p.v*h+time*(.12+p.depth*.35)+Math.sin(time*.07+p.phase)*3)%h;
+      const textSide=hero&&(s.compact?y<a.y-a.h*.48:x<w*.48);
+      const edge=Math.min(1,x/30,(w-x)/30);
+      const alpha=(.32+p.depth*.45)*(.91+.09*Math.sin(time*.23+p.phase))*(textSide?.30:hero?1:.40)*edge;
+      const tone=p.tone>.95?3:p.tone>.76?1:0;
+      const size=2+p.size*(p.depth>.9?3.4:1.5);
+      star(c,x,y,size,alpha,tone);
+      if(p.depth>.992){
+        c.globalAlpha=alpha*.38;
+        const length=5+p.size*3;
+        const g=c.createLinearGradient(x-length,y,x+length,y);
+        g.addColorStop(0,'rgba(210,239,250,0)');g.addColorStop(.5,'rgba(210,239,250,.8)');g.addColorStop(1,'rgba(210,239,250,0)');
+        c.fillStyle=g;c.fillRect(x-length,y-.35,length*2,.7);
+        c.save();c.translate(x,y);c.rotate(Math.PI/2);c.translate(-x,-y);c.fillRect(x-length,y-.35,length*2,.7);c.restore();
+        star(c,x,y,22,alpha*.28,tone);
+      }
     }
+    c.restore();
     if(hero){
       c.save();c.globalCompositeOperation='lighter';
-      // A tilted galaxy of fine dust wraps the mark without obscuring its shape.
-      for(let i=0;i<(s.compact?500:dust.length);i++){
-        const p=dust[i],angle=p.angle+time*.035,r=p.radius;
-        const xx=Math.cos(angle)*a.w*.80*r,yy=Math.sin(angle)*a.w*.33*r;
-        const x=a.x+xx*.91+yy*.42,y=a.y-xx*.42+yy*.91;
-        c.fillStyle=`rgba(${i%3?'112,156,227':'97,245,220'},${(.12+.24*(.5+.5*Math.sin(p.phase+time*.8)))*(1-r*.45)})`;
-        c.fillRect(x,y,p.size,p.size);
+      // A diffuse, unhurried orbital layer puts air around the silhouette.
+      for(let i=0;i<(s.compact?380:650);i++){
+        const p=dust[i],angle=p.angle+time*.012,r=p.radius;
+        const xx=Math.cos(angle)*a.w*.75*r,yy=Math.sin(angle)*a.w*.40*r;
+        const x=a.x+xx*.94+yy*.34,y=a.y-xx*.34+yy*.94;
+        star(c,x,y,2+p.size*1.7,(.15+.13*Math.sin(p.phase+time*.14))*(1-r*.45),i%3?2:1);
       }
       const size=a.w,step=dt*60,radius=s.compact?72:110;
       let displacement=0,affected=0;
+      const yaw=Math.sin(time*.09)*.12,driftScale=size/355;
       for(const p of s.particles){
-        const bx=a.x+p.u*size+Math.sin(time*.65+p.phase)*1.3;
-        const by=a.y+p.v*size+Math.sin(time*.48)*5+Math.cos(time*.55+p.phase)*1.3;
+        // Continuous, slow trajectories through a coherent flow field. Each star
+        // changes position, rather than just blinking on a fixed logo bitmap.
+        const phase=time*p.speed+p.phase;
+        const flowX=Math.sin(p.v*5+time*.16)*6+Math.cos(phase)*p.drift;
+        const flowY=Math.cos(p.u*5+time*.13)*5+Math.sin(phase+p.orbit)*p.drift*.8;
+        const bx=a.x+(p.u*Math.cos(yaw)+p.z*Math.sin(yaw))*size+flowX*driftScale;
+        const by=a.y+p.v*size+flowY*driftScale+Math.sin(time*.12)*3;
+        if(p===s.particles[0])s.driftSample=[bx,by];
         if(dt){
           if(s.pointerActive){
             const dx=bx+p.dx-s.mx,dy=by+p.dy-s.my,d=Math.hypot(dx,dy);
@@ -110,12 +146,10 @@
           const damping=Math.pow(.86,step);p.vx*=damping;p.vy*=damping;p.dx+=p.vx*step;p.dy+=p.vy*step;
         }
         const offset=Math.hypot(p.dx,p.dy);displacement=Math.max(displacement,offset);
-        const shimmer=.70+.30*Math.sin(time*1.3+p.phase),pixel=(s.compact?1.35:1.65)*p.size;
-        const alpha=Math.min(1,p.light*shimmer+.20);
-        const x=bx+p.dx,y=by+p.dy;
-        c.fillStyle=`rgba(${p.color},${alpha*.09})`;c.fillRect(x-2,y-2,pixel+4,pixel+4);
-        c.fillStyle=`rgba(${offset>10?'143,246,255':p.color},${alpha})`;c.fillRect(x,y,pixel,pixel);
-        if(p.size>1.31){c.fillStyle=`rgba(225,250,255,${alpha*.65})`;c.fillRect(x-2,y+pixel*.5,pixel+4,.7);c.fillRect(x+pixel*.5,y-2,.7,pixel+4);}
+        const alpha=p.light*(.91+.09*Math.sin(time*.20+p.phase));
+        const x=bx+p.dx,y=by+p.dy,pixel=(s.compact?3.9:5.0)*p.size;
+        // Fine points form the mark; a sparse, defocused layer adds depth.
+        star(c,x,y,p.depth>.92?pixel*2.2:pixel,alpha*(p.depth>.92?.5:1),offset>10?1:p.tone);
       }
       s.displacement=displacement;s.affected=affected;c.restore();
     }
@@ -164,7 +198,7 @@
   on(window,'pagehide',stop);on(window,'pageshow',sync);
   if(logo?.complete&&logo.naturalWidth)sampleLogo();else if(logo)on(logo,'load',sampleLogo,{once:true});
   window.PTR_MOTION={version:VERSION,pause,resume,
-    get status(){return{version:VERSION,shape:'logo-pixels',paused:userPaused,running:allowed()&&Boolean(frame),frames:draws,logoPoints:logoPoints.length,active:scenes.filter(s=>s.visible).length,scenes:scenes.map(s=>({kind:s.kind,frames:s.frames,visible:s.visible,failed:s.failed,particles:s.particles.length,pointerActive:s.pointerActive,displacement:s.displacement,affected:s.affected}))};},
+    get status(){return{version:VERSION,shape:'logo-pixels',paused:userPaused,running:allowed()&&Boolean(frame),frames:draws,logoPoints:logoPoints.length,active:scenes.filter(s=>s.visible).length,scenes:scenes.map(s=>({kind:s.kind,frames:s.frames,visible:s.visible,failed:s.failed,particles:s.particles.length,pointerActive:s.pointerActive,displacement:s.displacement,affected:s.affected,driftSample:s.driftSample}))};},
     destroy(){stop();observer?.disconnect();dialogs.disconnect();cleanups.forEach(fn=>fn());scenes.forEach(s=>{s.canvas.remove();s.host.classList.remove('ambient-scene');delete s.host.dataset.motionVersion;});control.remove();hint.remove();delete document.documentElement.dataset.ambientMotion;delete window.PTR_MOTION;}
   };
   sync();

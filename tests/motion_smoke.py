@@ -3,7 +3,7 @@ Run against a URL (real browser navigation), or --html for isolated local QA.
 Test output and screenshots go outside the source tree. No inquiries are sent.
 """
 from pathlib import Path
-import argparse, json, os, time, urllib.request
+import argparse, json, math, os, time, urllib.request
 from playwright.sync_api import sync_playwright
 
 parser = argparse.ArgumentParser()
@@ -14,7 +14,7 @@ parser.add_argument('--output', required=True)
 parser.add_argument('--wait-for-publish', action='store_true')
 args = parser.parse_args()
 out = Path(args.output); out.mkdir(parents=True, exist_ok=True)
-VERSION = '3.0.0'
+VERSION = '3.1.0'
 checks = []
 def check(name, condition):
     checks.append({'name': name, 'passed': bool(condition)})
@@ -70,6 +70,10 @@ with sync_playwright() as p:
         check('Animation frames advance', status()['frames'] > a)
         check('Actual canvas pixels change', digest() != pixels)
         check('Animation running', status()['running'])
+        origin=status()['scenes'][0]['driftSample']
+        page.wait_for_timeout(2000)
+        distance=math.dist(origin,status()['scenes'][0]['driftSample'])
+        check('Logo particles move slowly without input', .25 < distance < 16)
         check('Logo pixels loaded from the real mark', status()['logoPoints'] > 1000 and status()['shape'] == 'logo-pixels')
         visual=page.locator('.hero-visual').bounding_box()
         height=visual['height']-106
@@ -135,7 +139,7 @@ with sync_playwright() as p:
         page.evaluate('PTR_MOTION.pause()');page.screenshot(path=str(out/'full-page.png'),full_page=True)
         mobile=browser.new_context(viewport={'width':390,'height':844},is_mobile=True,has_touch=True,device_scale_factor=1,reduced_motion='reduce')
         phone=mobile.new_page();phone.on('pageerror', lambda e: errors.append(str(e)))
-        load(phone);phone.wait_for_function('window.PTR_MOTION?.version === "3.0.0" && PTR_MOTION.status.logoPoints > 1000')
+        load(phone);phone.wait_for_function('window.PTR_MOTION?.version === "3.1.0" && PTR_MOTION.status.logoPoints > 1000')
         if phone.locator('#reject-cookies').is_visible():phone.locator('#reject-cookies').click()
         phone.wait_for_timeout(150)
         check('Initial reduced-motion mobile load autoplays', phone.evaluate('PTR_MOTION.status.running'))
