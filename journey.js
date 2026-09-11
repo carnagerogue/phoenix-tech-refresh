@@ -7,7 +7,7 @@
   const root=document.documentElement,nav=document.querySelector('.journey-nav');
   const opening=document.querySelector('.opening-sequence'),hero=opening?.querySelector('.hero');
   if(!nav||!hero)return;
-  const VERSION='5.0.0',TAU=Math.PI*2;
+  const VERSION='5.0.1',TAU=Math.PI*2;
   const compact=matchMedia('(max-width: 760px)');
   const interactive='a,button,input,select,textarea,summary,dialog';
   const pauseButton=nav.querySelector('.journey-pause'),links=[...nav.querySelectorAll('.journey-chapters a')];
@@ -196,7 +196,7 @@
         s.stage.dataset.cameraProgress=(steady?.3:progress).toFixed(3);
       }
     }
-    const first=scenes[0],visible=Boolean(first&&y>first.top-innerHeight*.38&&y<contactEnd-innerHeight*.55);
+    const first=scenes[0],visible=Boolean(first&&y>first.top-innerHeight*.38&&y<contactEnd-innerHeight*.92);
     nav.hidden=!visible;root.classList.toggle('journey-active',visible);
     let active=0;
     scenes.forEach((s,i)=>{if(y+innerHeight*.48>=s.top)active=i;});

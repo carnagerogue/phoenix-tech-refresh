@@ -53,6 +53,7 @@ The website has no Playwright runtime dependency. CI installs pinned Python Play
 ```sh
 python tests/motion_smoke.py --url http://127.0.0.1:4173 --output /tmp/phoenix-qa
 python tests/redesign_smoke.py --url http://127.0.0.1:4173 --output /tmp/phoenix-redesign-qa
+python tests/journey_smoke.py --url http://127.0.0.1:4173 --output /tmp/phoenix-journey-qa
 ```
 
 Verification navigates both the local HTTP build and the published GitHub Pages site. Passing these checks is not a formal accessibility, security, privacy, or Core Web Vitals audit.

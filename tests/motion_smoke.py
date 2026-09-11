@@ -14,7 +14,7 @@ parser.add_argument('--output', required=True)
 parser.add_argument('--wait-for-publish', action='store_true')
 args = parser.parse_args()
 out = Path(args.output); out.mkdir(parents=True, exist_ok=True)
-VERSION = '5.0.0'
+VERSION = '5.0.1'
 checks = []
 def check(name, condition):
     checks.append({'name': name, 'passed': bool(condition)})

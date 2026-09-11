@@ -51,7 +51,6 @@
 .journey-nav :focus-visible{outline-color:#65e3c1}
 .journey-active .privacy-shortcut{bottom:96px}
 body:has(dialog[open]) .journey-nav,body:has(.cookie-banner:not([hidden])) .journey-nav{visibility:hidden;pointer-events:none}
-.journey-active .site-footer{padding-bottom:100px}
 [data-ambient-motion=paused] .journey-copy,[data-ambient-motion=paused] .opening-sequence .hero-copy,[data-ambient-motion=paused] .opening-sequence .hero-bottom{translate:none;opacity:1}
 [data-ambient-motion=paused] .opening-sequence .ambient-canvas{opacity:1}
 @media(min-width:1800px){.cinema-layout{padding-top:0}.journey-copy h2{font-size:118px}.journey-copy p{font-size:19px}.cinema-renew .reuse-copy h2{font-size:110px}}

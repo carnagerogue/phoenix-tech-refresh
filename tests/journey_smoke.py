@@ -24,7 +24,7 @@ with sync_playwright() as p:
         page.wait_for_timeout(1200)
     try:
         response=page.goto(args.url,wait_until='networkidle')
-        page.wait_for_function('window.PTR_JOURNEY?.version === "5.0.0"')
+        page.wait_for_function('window.PTR_JOURNEY?.version === "5.0.1"')
         check('Cinematic website loads',response.status==200 and 'Handled.' in page.locator('h1').inner_text())
         check('All three chapters are present',page.locator('[data-journey-scene]').count()==3)
         page.locator('#reject-cookies').click();page.wait_for_timeout(4700)
@@ -79,6 +79,17 @@ with sync_playwright() as p:
         page.locator('.journey-pause').press('Space');page.wait_for_timeout(100)
         check('Manual pause is available with reduced motion',state()['paused'] and not state()['running'])
         page.locator('.journey-pause').click()
+        # Chapter navigation visibility must never change document height at the footer.
+        # Otherwise short footers can oscillate across the navigation threshold.
+        for height in [1000,1100,1200]:
+            page.set_viewport_size({'width':1440,'height':height})
+            page.get_by_role('link',name='Privacy Policy',exact=True).click()
+            page.locator('#content-dialog').wait_for(state='visible')
+            check(f'Footer privacy link remains clickable at {height}px',page.locator('#content-dialog').is_visible())
+            page.locator('#content-dialog [data-close]').click();page.wait_for_timeout(700)
+            before=page.evaluate('scrollY');page.wait_for_timeout(400)
+            check(f'Footer scroll position is stable at {height}px',abs(page.evaluate('scrollY')-before)<1)
+            check(f'Chapter rail stays clear of the footer at {height}px',not page.locator('.journey-nav').is_visible())
         for width,height in [(320,740),(390,844),(768,1024),(1024,768),(1440,900),(1920,1080)]:
             page.set_viewport_size({'width':width,'height':height});page.wait_for_timeout(200)
             check(f'No horizontal overflow at {width} by {height}',page.evaluate('document.documentElement.scrollWidth<=innerWidth+1'))
