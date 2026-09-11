@@ -7,7 +7,7 @@
   const root=document.documentElement,nav=document.querySelector('.journey-nav');
   const opening=document.querySelector('.opening-sequence'),hero=opening?.querySelector('.hero');
   if(!nav||!hero)return;
-  const VERSION='5.0.1',TAU=Math.PI*2;
+  const VERSION='5.0.2',TAU=Math.PI*2;
   const compact=matchMedia('(max-width: 760px)');
   const interactive='a,button,input,select,textarea,summary,dialog';
   const pauseButton=nav.querySelector('.journey-pause'),links=[...nav.querySelectorAll('.journey-chapters a')];
@@ -181,7 +181,10 @@
     opening.style.setProperty('--galaxy-opacity',1-smooth(.76,1,intro));
     window.PTR_MOTION?.setCamera(travel);
     for(const s of scenes){
-      const progress=clamp((y-s.top+headerHeight)/Math.max(1,s.height-s.h));
+      const range=s.height-s.h;
+      // Unpinned short screens still get a continuous camera path as the scene
+      // crosses the viewport, rather than jumping between its endpoints.
+      const progress=range>80?clamp((y-s.top+headerHeight)/range):clamp((y-s.top+innerHeight)/(innerHeight+s.h));
       s.velocity=Math.max(s.velocity,Math.abs(progress-s.progress));s.progress=progress;
       const pinned=s.height-s.h>80&&!steady;
       const fade=pinned?smooth(.76,1,progress):0;
