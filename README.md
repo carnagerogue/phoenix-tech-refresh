@@ -23,12 +23,15 @@ npm run build      # Complete static site in _site/
 npm run standalone # Self-contained offline HTML in dist/
 ```
 
-The original copy, content, illustrations, cookies, and legal review drafts remain in place. The hero gives the dimensional artwork room to breathe, with the technician illustration retained as a small supporting tile. See `docs/MOTION_DESIGN.md` for the published-animation fix and intentional design changes.
+The redesigned homepage uses locally hosted Manrope typography, a larger orbital particle mark, a photographic service explorer, a connected lifecycle timeline, and an immersive forest-and-river section. `design.css` contains the coordinated responsive visual system; `design.js` adds lightweight scroll reveals and navigation feedback without changing native scrolling. The original service content, privacy controls, and legal review drafts remain available.
+
+The new hardware, architectural, and environmental images are AI-generated illustrations, not photographs of Phoenix facilities. The bundled Manrope font is distributed under the SIL Open Font License in `assets/manrope-OFL.txt`. Fonts and images are served locally; there are no third-party runtime requests.
 
 ## Included experience
 
 - Approved Premium Corporate #2 logo and iT1 parent-company identification.
 - Eight services, six-step lifecycle, industry perspectives, resource guides, and FAQs.
+- Previous/next service controls, keyboard-accessible lifecycle navigation, editorial image-led resources, and desktop/mobile layouts.
 - Synthetic client-portal records, asset search, document examples, and sample exports.
 - Local-only project summary with validation; email draft opens only on user action.
 - Working privacy preferences, no installed analytics or advertising vendors.
@@ -47,6 +50,7 @@ The website has no Playwright runtime dependency. CI installs pinned Python Play
 
 ```sh
 python tests/motion_smoke.py --url http://127.0.0.1:4173 --output /tmp/phoenix-qa
+python tests/redesign_smoke.py --url http://127.0.0.1:4173 --output /tmp/phoenix-redesign-qa
 ```
 
 Verification navigates both the local HTTP build and the published GitHub Pages site. Passing these checks is not a formal accessibility, security, privacy, or Core Web Vitals audit.

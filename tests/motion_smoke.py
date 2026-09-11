@@ -14,7 +14,7 @@ parser.add_argument('--output', required=True)
 parser.add_argument('--wait-for-publish', action='store_true')
 args = parser.parse_args()
 out = Path(args.output); out.mkdir(parents=True, exist_ok=True)
-VERSION = '3.1.0'
+VERSION = '4.0.0'
 checks = []
 def check(name, condition):
     checks.append({'name': name, 'passed': bool(condition)})
@@ -76,8 +76,8 @@ with sync_playwright() as p:
         check('Logo particles move slowly without input', .25 < distance < 16)
         check('Logo pixels loaded from the real mark', status()['logoPoints'] > 1000 and status()['shape'] == 'logo-pixels')
         visual=page.locator('.hero-visual').bounding_box()
-        height=visual['height']-106
-        size=min(visual['width']*.80,height*.88)
+        height=visual['height']-35
+        size=min(visual['width']*.88,height*.88)
         x=visual['x']+visual['width']*.5-size*.1
         y=visual['y']+height*.49-size*.40
         page.mouse.move(x,y);page.wait_for_timeout(650)
@@ -139,7 +139,7 @@ with sync_playwright() as p:
         page.evaluate('PTR_MOTION.pause()');page.screenshot(path=str(out/'full-page.png'),full_page=True)
         mobile=browser.new_context(viewport={'width':390,'height':844},is_mobile=True,has_touch=True,device_scale_factor=1,reduced_motion='reduce')
         phone=mobile.new_page();phone.on('pageerror', lambda e: errors.append(str(e)))
-        load(phone);phone.wait_for_function('window.PTR_MOTION?.version === "3.1.0" && PTR_MOTION.status.logoPoints > 1000')
+        load(phone);phone.wait_for_function('window.PTR_MOTION?.version === "4.0.0" && PTR_MOTION.status.logoPoints > 1000')
         if phone.locator('#reject-cookies').is_visible():phone.locator('#reject-cookies').click()
         phone.wait_for_timeout(150)
         check('Initial reduced-motion mobile load autoplays', phone.evaluate('PTR_MOTION.status.running'))
@@ -148,7 +148,7 @@ with sync_playwright() as p:
         check('Mobile canvas pixels animate without pressing play', digest(phone)!=before)
         # Exercise native touch events against the visible logo band, without blocking scrolling.
         visual=phone.locator('.hero-visual').bounding_box()
-        height=visual['height']-106;size=min(visual['width']*.80,height*.88)
+        height=visual['height']-35;size=min(visual['width']*.88,height*.88)
         x=visual['x']+visual['width']*.5-size*.1;y=visual['y']+height*.49-size*.40
         touch=mobile.new_cdp_session(phone)
         touch.send('Input.dispatchTouchEvent',{'type':'touchStart','touchPoints':[{'x':x,'y':y}]})

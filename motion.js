@@ -4,7 +4,7 @@
 'use strict';
 (() => {
   if (window.PTR_MOTION || !document.querySelector('.hero')) return;
-  const VERSION = '3.1.0', TAU = Math.PI * 2;
+  const VERSION = '4.0.0', TAU = Math.PI * 2;
   const coarse = matchMedia('(pointer: coarse)');
   const interactive = 'a,button,input,select,textarea,dialog,summary,[role="tab"]';
   const scenes=[],cleanups=[];
@@ -53,8 +53,8 @@
     s.compact=s.w<760||coarse.matches;
     const visual=s.host.querySelector('.hero-visual');
     if(visual){
-      const a=visual.getBoundingClientRect(),height=Math.max(180,a.height-106);
-      s.art={x:a.left-r.left+a.width*.5,y:a.top-r.top+height*.49,w:Math.min(a.width*.80,height*.88),h:height};
+      const a=visual.getBoundingClientRect(),height=Math.max(180,a.height-35);
+      s.art={x:a.left-r.left+a.width*.5,y:a.top-r.top+height*.49,w:Math.min(a.width*.88,height*.88),h:height};
     }else s.art={x:s.w*.77,y:s.h*.52,w:Math.min(s.w*.36,380),h:s.h};
     const dpr=Math.min(devicePixelRatio||1,s.compact?1.5:2,2600/s.w);
     s.canvas.width=Math.round(s.w*dpr);s.canvas.height=Math.round(s.h*dpr);s.ctx.setTransform(dpr,0,0,dpr,0,0);
@@ -72,14 +72,14 @@
       const ctx=mask.getContext('2d',{willReadFrequently:true});ctx.drawImage(logo,0,0,mask.width,mask.height);
       const data=ctx.getImageData(0,0,mask.width,mask.height).data;
       // Random continuous positions avoid the stamped bitmap grid of the first version.
-      for(let attempt=0;attempt<40000&&logoPoints.length<3300;attempt++){
+      for(let attempt=0;attempt<100000&&logoPoints.length<6500;attempt++){
         const x=random()*mask.width,y=random()*mask.height,i=(Math.floor(y)*mask.width+Math.floor(x))*4;
         const r=data[i],g=data[i+1],b=data[i+2];
         if(data[i+3]<170||Math.max(r,g,b)<48)continue;
         const teal=g>r*1.2&&b>r*1.1,depth=random();
         logoPoints.push({u:(x-mask.width/2)/mask.width,v:(y-mask.height/2)/mask.width,
           phase:random()*TAU,orbit:random()*TAU,depth,z:(random()-.5)*.22,
-          speed:.11+random()*.15,drift:3+random()*8,size:.6+random()*.65,
+          speed:.11+random()*.15,drift:2+random()*5,size:.6+random()*.65,
           light:.55+random()*.35,tone:teal?1:depth>.84?2:0});
       }
       populate();
@@ -90,9 +90,9 @@
     const c=s.ctx,w=s.w,h=s.h,a=s.art,hero=s.kind==='hero';
     c.clearRect(0,0,w,h);
     const pulse=.88+Math.sin(time*.27)*.12;
-    glow(c,a.x-w*.04,a.y,a.w*.92,a.h*.7,`rgba(51,32,115,${.32*pulse})`);
+    glow(c,a.x-w*.04,a.y,a.w*.92,a.h*.7,`rgba(22,72,82,${.25*pulse})`);
     glow(c,a.x+a.w*.27,a.y+a.h*.16,a.w*.66,a.h*.52,'rgba(0,131,132,.21)');
-    glow(c,a.x-a.w*.24,a.y-a.h*.20,a.w*.50,a.h*.43,'rgba(62,87,168,.19)');
+    glow(c,a.x-a.w*.24,a.y-a.h*.20,a.w*.50,a.h*.43,'rgba(62,87,128,.13)');
     // Deep, slowly translating stars with only a few bright diffraction glints.
     // The foreground and distant layers travel at different speeds.
     c.save();c.globalCompositeOperation='lighter';
@@ -101,7 +101,7 @@
       const y=(p.v*h+time*(.12+p.depth*.35)+Math.sin(time*.07+p.phase)*3)%h;
       const textSide=hero&&(s.compact?y<a.y-a.h*.48:x<w*.48);
       const edge=Math.min(1,x/30,(w-x)/30);
-      const alpha=(.32+p.depth*.45)*(.91+.09*Math.sin(time*.23+p.phase))*(textSide?.30:hero?1:.40)*edge;
+      const alpha=(.32+p.depth*.45)*(.91+.09*Math.sin(time*.23+p.phase))*(textSide?.10:hero?.62:.22)*edge;
       const tone=p.tone>.95?3:p.tone>.76?1:0;
       const size=2+p.size*(p.depth>.9?3.4:1.5);
       star(c,x,y,size,alpha,tone);
@@ -125,6 +125,17 @@
         const x=a.x+xx*.94+yy*.34,y=a.y-xx*.34+yy*.94;
         star(c,x,y,2+p.size*1.7,(.15+.13*Math.sin(p.phase+time*.14))*(1-r*.45),i%3?2:1);
       }
+      // Two slow orbital paths frame the actual logo without spinning its silhouette.
+      c.globalAlpha=1;
+      for(let orbit=0;orbit<2;orbit++){
+        const rotation=orbit?-.58:-.32,rx=a.w*(orbit?.83:.76),ry=a.w*(orbit?.39:.58);
+        c.save();c.globalAlpha=1;c.translate(a.x,a.y);c.rotate(rotation);
+        c.strokeStyle=orbit?'rgba(101,227,193,.20)':'rgba(181,224,216,.33)';
+        c.lineWidth=.65;c.beginPath();c.ellipse(0,0,rx,ry,0,0,TAU);c.stroke();
+        const angle=time*(orbit?-.025:.018)+(orbit?2.4:5.2);
+        star(c,Math.cos(angle)*rx,Math.sin(angle)*ry,orbit?13:19,.85,orbit?1:0);
+        c.restore();
+      }
       const size=a.w,step=dt*60,radius=s.compact?72:110;
       let displacement=0,affected=0;
       const yaw=Math.sin(time*.09)*.12,driftScale=size/355;
@@ -132,8 +143,8 @@
         // Continuous, slow trajectories through a coherent flow field. Each star
         // changes position, rather than just blinking on a fixed logo bitmap.
         const phase=time*p.speed+p.phase;
-        const flowX=Math.sin(p.v*5+time*.16)*6+Math.cos(phase)*p.drift;
-        const flowY=Math.cos(p.u*5+time*.13)*5+Math.sin(phase+p.orbit)*p.drift*.8;
+        const flowX=Math.sin(p.v*5+time*.16)*4+Math.cos(phase)*p.drift;
+        const flowY=Math.cos(p.u*5+time*.13)*3+Math.sin(phase+p.orbit)*p.drift*.8;
         const bx=a.x+(p.u*Math.cos(yaw)+p.z*Math.sin(yaw))*size+flowX*driftScale;
         const by=a.y+p.v*size+flowY*driftScale+Math.sin(time*.12)*3;
         if(p===s.particles[0])s.driftSample=[bx,by];
@@ -147,11 +158,23 @@
         }
         const offset=Math.hypot(p.dx,p.dy);displacement=Math.max(displacement,offset);
         const alpha=p.light*(.91+.09*Math.sin(time*.20+p.phase));
-        const x=bx+p.dx,y=by+p.dy,pixel=(s.compact?3.9:5.0)*p.size;
+        const x=bx+p.dx,y=by+p.dy,pixel=(s.compact?3.5:4.2)*p.size;
         // Fine points form the mark; a sparse, defocused layer adds depth.
         star(c,x,y,p.depth>.92?pixel*2.2:pixel,alpha*(p.depth>.92?.5:1),offset>10?1:p.tone);
       }
       s.displacement=displacement;s.affected=affected;c.restore();
+    }
+    if(s.kind==='contact'){
+      // A continuous field of fine points carries the lifecycle motif into the closing invitation.
+      c.save();c.globalCompositeOperation='lighter';
+      const cols=s.compact?95:210,rows=s.compact?22:38;
+      for(let row=0;row<rows;row++)for(let col=0;col<cols;col++){
+        const u=col/(cols-1),v=row/(rows-1);
+        const x=u*w,y=h*(.79+Math.sin(u*6.4+time*.14+v*.8)*.13)+(v-.5)*h*.27;
+        const alpha=(.20+v*.36)*(u<.43?.38:1);
+        star(c,x,y,2.6+v*2.4,alpha,1);
+      }
+      c.restore();
     }
     s.frames++;draws++;
   }

@@ -5,8 +5,8 @@ import { join } from 'node:path';
 // Publish only the website allowlist, not development or review documents.
 const root = fileURLToPath(new URL('.', import.meta.url));
 const out = join(root, '_site');
-const files = ['styles.css', 'icons.js', 'content.js', 'app.js', 'motion.css', 'motion.js',
-  'assets/logo.webp', 'assets/hero.webp', 'assets/forest.webp'];
+const files = ['styles.css', 'icons.js', 'content.js', 'app.js', 'motion.css', 'motion.js', 'design.css', 'design.js',
+  'assets/manrope.ttf', 'assets/manrope-OFL.txt', 'assets/hardware.webp', 'assets/security.webp', 'assets/forest-river.webp', 'assets/logo.webp', 'assets/hero.webp', 'assets/forest.webp'];
 await rm(out, { recursive: true, force: true });
 await mkdir(join(out, 'assets'), { recursive: true });
 await Promise.all(files.map(f => copyFile(join(root, f), join(out, f))));
@@ -17,15 +17,16 @@ if (!html.includes('noindex,nofollow')) throw new Error('Executive preview must 
 await writeFile(join(out, 'index.html'), html);
 await writeFile(join(out, '.nojekyll'), '');
 if (process.argv.includes('--standalone')) {
-  for (const f of ['styles.css', 'motion.css']) {
+  for (const f of ['styles.css', 'motion.css', 'design.css']) {
     const css = await readFile(join(root, f), 'utf8');
     html = html.replace(new RegExp(`<link rel="stylesheet" href="${f.replaceAll('.', '\\.')}(?:\\?[^"<>]*)?">`), () => `<style>${css}</style>`);
   }
-  for (const f of ['icons.js', 'content.js', 'app.js', 'motion.js']) {
+  for (const f of ['icons.js', 'content.js', 'app.js', 'motion.js', 'design.js']) {
     const script = await readFile(join(root, f), 'utf8');
     html = html.replace(new RegExp(`<script src="${f.replaceAll('.', '\\.')}(?:\\?[^"<>]*)?"></script>`), () => `<script>${script}</script>`);
   }
   for (const f of files.filter(f => f.endsWith('.webp'))) html = html.replaceAll(f, `data:image/webp;base64,${(await readFile(join(root, f))).toString('base64')}`);
+  html = html.replaceAll('assets/manrope.ttf', `data:font/ttf;base64,${(await readFile(join(root, 'assets/manrope.ttf'))).toString('base64')}`);
   await mkdir(join(root, 'dist'), { recursive: true });
   await writeFile(join(root, 'dist', 'Phoenix_Tech_Refresh_Animated_Preview.html'), html);
 }

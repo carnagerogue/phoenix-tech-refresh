@@ -8,7 +8,7 @@
     "start": "node build.mjs && node serve.mjs",
     "build": "node build.mjs",
     "standalone": "node build.mjs --standalone",
-    "check": "node --check app.js && node --check content.js && node --check icons.js && node --check motion.js && node --check build.mjs && node --check serve.mjs"
+    "check": "node --check app.js && node --check content.js && node --check icons.js && node --check motion.js && node --check design.js && node --check build.mjs && node --check serve.mjs"
   },
   "engines": {
     "node": ">=20"

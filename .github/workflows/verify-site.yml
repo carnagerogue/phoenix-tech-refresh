@@ -27,6 +27,7 @@ jobs:
           node serve.mjs > "$RUNNER_TEMP/phoenix-server.log" 2>&1 &
           curl --retry 8 --retry-connrefused --retry-delay 1 --silent --fail http://127.0.0.1:4173 > /dev/null
           python tests/motion_smoke.py --url http://127.0.0.1:4173 --output "$RUNNER_TEMP/phoenix-qa/local"
+          python tests/redesign_smoke.py --url http://127.0.0.1:4173 --output "$RUNNER_TEMP/phoenix-qa/redesign"
       - name: Verify the actual published GitHub Pages website
         run: python tests/motion_smoke.py --url https://carnagerogue.github.io/phoenix-tech-refresh/ --wait-for-publish --output "$RUNNER_TEMP/phoenix-qa/published"
       - name: Save browser evidence
