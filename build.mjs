@@ -5,7 +5,7 @@ import { join } from 'node:path';
 // Publish only the website allowlist, not development or review documents.
 const root = fileURLToPath(new URL('.', import.meta.url));
 const out = join(root, '_site');
-const files = ['styles.css', 'icons.js', 'content.js', 'app.js', 'motion.css', 'motion.js', 'design.css', 'design.js',
+const files = ['styles.css', 'icons.js', 'content.js', 'app.js', 'motion.css', 'motion.js', 'design.css', 'design.js', 'journey.css', 'journey.js',
   'assets/manrope.ttf', 'assets/manrope-OFL.txt', 'assets/hardware.webp', 'assets/security.webp', 'assets/forest-river.webp', 'assets/logo.webp', 'assets/hero.webp', 'assets/forest.webp'];
 await rm(out, { recursive: true, force: true });
 await mkdir(join(out, 'assets'), { recursive: true });
@@ -17,11 +17,11 @@ if (!html.includes('noindex,nofollow')) throw new Error('Executive preview must 
 await writeFile(join(out, 'index.html'), html);
 await writeFile(join(out, '.nojekyll'), '');
 if (process.argv.includes('--standalone')) {
-  for (const f of ['styles.css', 'motion.css', 'design.css']) {
+  for (const f of ['styles.css', 'motion.css', 'design.css', 'journey.css']) {
     const css = await readFile(join(root, f), 'utf8');
     html = html.replace(new RegExp(`<link rel="stylesheet" href="${f.replaceAll('.', '\\.')}(?:\\?[^"<>]*)?">`), () => `<style>${css}</style>`);
   }
-  for (const f of ['icons.js', 'content.js', 'app.js', 'motion.js', 'design.js']) {
+  for (const f of ['icons.js', 'content.js', 'app.js', 'motion.js', 'design.js', 'journey.js']) {
     const script = await readFile(join(root, f), 'utf8');
     html = html.replace(new RegExp(`<script src="${f.replaceAll('.', '\\.')}(?:\\?[^"<>]*)?"></script>`), () => `<script>${script}</script>`);
   }

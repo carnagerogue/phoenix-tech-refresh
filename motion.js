@@ -4,13 +4,13 @@
 'use strict';
 (() => {
   if (window.PTR_MOTION || !document.querySelector('.hero')) return;
-  const VERSION = '4.1.0', TAU = Math.PI * 2;
+  const VERSION = '5.0.0', TAU = Math.PI * 2;
   const coarse = matchMedia('(pointer: coarse)');
   const interactive = 'a,button,input,select,textarea,dialog,summary,[role="tab"]';
   const scenes=[],cleanups=[];
   let frame=0,last=0,time=0,draws=0,userPaused=false;
   let visiblePage=!document.hidden,modalOpen=Boolean(document.querySelector('dialog[open]'));
-  let logoPoints=[];
+  let logoPoints=[],cameraTravel=0;
   // Deterministic positions prevent stars from jumping on resize.
   let seed=71421;
   const random=()=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296;};
@@ -87,7 +87,9 @@
   }
   function draw(s,dt){
     if(s.failed||!s.w)return;
-    const c=s.ctx,w=s.w,h=s.h,a=s.art,hero=s.kind==='hero';
+    const c=s.ctx,w=s.w,h=s.h,hero=s.kind==='hero';
+    const travel=hero?cameraTravel:0;
+    const a=hero?{...s.art,x:s.art.x+(w*.5-s.art.x)*travel,w:s.art.w*(1+travel*1.8)}:s.art;
     c.clearRect(0,0,w,h);
     const breath=Math.sin(time*.72),pulse=.82+breath*.18;
     const floatX=Math.sin(time*.36)*a.w*.025,floatY=Math.sin(time*.48)*a.w*.032;
@@ -248,6 +250,7 @@
   on(window,'pagehide',stop);on(window,'pageshow',sync);
   if(logo?.complete&&logo.naturalWidth)sampleLogo();else if(logo)on(logo,'load',sampleLogo,{once:true});
   window.PTR_MOTION={version:VERSION,pause,resume,
+    setCamera(value){cameraTravel=Math.min(1,Math.max(0,Number(value)||0));},
     get status(){return{version:VERSION,shape:'logo-pixels',paused:userPaused,running:allowed()&&Boolean(frame),frames:draws,logoPoints:logoPoints.length,active:scenes.filter(s=>s.visible).length,scenes:scenes.map(s=>({kind:s.kind,frames:s.frames,visible:s.visible,failed:s.failed,particles:s.particles.length,pointerActive:s.pointerActive,displacement:s.displacement,affected:s.affected,driftSample:s.driftSample}))};},
     destroy(){stop();observer?.disconnect();dialogs.disconnect();cleanups.forEach(fn=>fn());scenes.forEach(s=>{s.canvas.remove();s.host.classList.remove('ambient-scene');delete s.host.dataset.motionVersion;});control.remove();hint.remove();delete document.documentElement.dataset.ambientMotion;delete window.PTR_MOTION;}
   };
