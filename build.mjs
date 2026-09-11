@@ -29,4 +29,4 @@ if (process.argv.includes('--standalone')) {
   await mkdir(join(root, 'dist'), { recursive: true });
   await writeFile(join(root, 'dist', 'Phoenix_Tech_Refresh_Animated_Preview.html'), html);
 }
-console.log('Built _site with the complete homepage, original assets, and Phoenix Flow.');
+console.log('Built _site with the complete homepage, original assets, and Phoenix Galaxy.');

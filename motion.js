@@ -1,256 +1,171 @@
-/* Phoenix Flow 2 — a sculpted, reflective lifecycle ribbon.
- * Local canvas rendering only: no network, dependencies, tracking or persistence.
- * Explicit imports in index.html support both branch Pages and the static build.
+/* Phoenix Galaxy — the Phoenix mark, formed from interactive stardust.
+ * Local Canvas 2D rendering. No dependencies, tracking, or remote assets.
  */
 'use strict';
 (() => {
   if (window.PTR_MOTION || !document.querySelector('.hero')) return;
-  const VERSION = '2.0.1';
-  const TAU = Math.PI * 2;
-  const reduced = matchMedia('(prefers-reduced-motion: reduce)');
+  const VERSION = '3.0.0', TAU = Math.PI * 2;
   const coarse = matchMedia('(pointer: coarse)');
-  const clamp = (x, a, b) => Math.max(a, Math.min(b, x));
-  const mix = (a, b, t) => a + (b - a) * t;
-  const normalize = a => { const l = Math.hypot(...a) || 1; return a.map(n => n / l); };
-  const cross = (a, b) => [a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]];
-  const dot = (a, b) => a[0]*b[0]+a[1]*b[1]+a[2]*b[2];
   const interactive = 'a,button,input,select,textarea,dialog,summary,[role="tab"]';
-  let time = 11, frame = 0, last = 0, draws = 0, userPaused = false;
-  // Respect the system default, while allowing an explicit choice on this page.
-  // Do not persist an override or carry it across a system-preference change.
-  let reducedOverride = false;
-  const motionEnabled = () => !userPaused && (!reduced.matches || reducedOverride);
-  let modalOpen = Boolean(document.querySelector('dialog[open]'));
-  let visiblePage = !document.hidden;
-  const scenes = [], cleanups = [];
-  const keyLight = normalize([-0.7, -0.65, 1.4]);
-  const fillLight = normalize([0.8, 0.2, 0.65]);
-  const view = [0,0,1];
-  const halfLight = normalize(keyLight.map((v,i)=>v+view[i]));
-
-  // A small, keyboard-accessible control is never captured by the artwork.
-  const control = document.createElement('button');
-  control.className = 'motion-control'; control.type = 'button';
-  const controlIcon = playing => `<svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">${playing ? '<path d="M7 5v10M13 5v10"/>' : '<path d="m7 4 8 6-8 6V4Z"/>'}</svg>`;
-  function updateControl() {
-    const playing = motionEnabled();
-    const reducedDefault = reduced.matches && !reducedOverride;
-    control.innerHTML = controlIcon(playing) + `<span>${playing ? 'Pause animation' : reducedDefault ? 'Play animation' : 'Resume animation'}</span>`;
-    control.setAttribute('aria-pressed', String(!playing));
-    control.setAttribute('aria-label', playing ? 'Pause ambient background animation' : reducedDefault ? 'Play ambient background animation' : 'Resume ambient background animation');
-    control.title = reducedDefault ? 'Paused to respect your reduced-motion preference. Play animation for this page.' : '';
-    document.documentElement.dataset.ambientMotion = playing ? 'playing' : reducedDefault ? 'reduced' : 'paused';
+  const scenes=[],cleanups=[];
+  let frame=0,last=0,time=0,draws=0,userPaused=false;
+  let visiblePage=!document.hidden,modalOpen=Boolean(document.querySelector('dialog[open]'));
+  let logoPoints=[];
+  // Deterministic positions prevent stars from jumping on resize.
+  let seed=71421;
+  const random=()=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296;};
+  const stars=Array.from({length:640},()=>({u:random(),v:random(),phase:random()*TAU,size:.5+random()*1.5,depth:random(),tone:random()}));
+  const dust=Array.from({length:900},()=>({angle:random()*TAU,radius:.35+random()*.95,phase:random()*TAU,size:.55+random()*1.35}));
+  function on(target,event,fn,options){target.addEventListener(event,fn,options);cleanups.push(()=>target.removeEventListener(event,fn,options));}
+  const control=document.createElement('button');
+  control.className='motion-control';control.type='button';
+  function updateControl(){
+    control.innerHTML=`<svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">${userPaused?'<path d="m7 4 8 6-8 6V4Z"/>':'<path d="M7 5v10M13 5v10"/>'}</svg><span>${userPaused?'Resume animation':'Pause animation'}</span>`;
+    control.setAttribute('aria-label',userPaused?'Resume galaxy animation':'Pause galaxy animation');
+    document.documentElement.dataset.ambientMotion=userPaused?'paused':'playing';
   }
-  const allowed = () => motionEnabled() && visiblePage && !modalOpen;
-  function start() { if (!frame && allowed() && scenes.some(s=>s.visible)) {last=0;frame=requestAnimationFrame(tick);} }
-  function stop() { cancelAnimationFrame(frame);frame=0;last=0; }
-  function sync() { updateControl();if(allowed())start();else stop(); }
-  function pause(){userPaused=true;reducedOverride=false;sync();}
-  function resume(){userPaused=false;reducedOverride=reduced.matches;sync();}
-  control.addEventListener('click',()=>{if(motionEnabled())pause();else resume();});
-
-  function rotation(p, angles) {
-    const [cx,sx,cy,sy,cz,sz] = angles;
-    let y=p[1]*cx-p[2]*sx, z=p[1]*sx+p[2]*cx;
-    let x=p[0]*cy+z*sy; z=-p[0]*sy+z*cy;
-    return [x*cz-y*sz,x*sz+y*cz,z];
+  // Autoplay is intentional for this experience, including reduced-motion browsers.
+  // A manual pause remains available. Invisible surfaces never consume frames.
+  const allowed=()=>!userPaused&&visiblePage&&!modalOpen;
+  function start(){if(!frame&&allowed()&&scenes.some(s=>s.visible&&!s.failed)){last=0;frame=requestAnimationFrame(tick);}}
+  function stop(){cancelAnimationFrame(frame);frame=0;last=0;}
+  function sync(){updateControl();if(allowed())start();else stop();}
+  function pause(){userPaused=true;sync();}
+  function resume(){userPaused=false;sync();}
+  on(control,'click',()=>{if(userPaused)resume();else pause();});
+  function glow(c,x,y,rx,ry,color){
+    c.save();c.translate(x,y);c.scale(rx,ry);
+    const g=c.createRadialGradient(0,0,0,0,0,1);g.addColorStop(0,color);g.addColorStop(1,'rgba(0,0,0,0)');
+    c.fillStyle=g;c.fillRect(-1,-1,2,2);c.restore();
   }
-  function getAngles(x,y,z){return [Math.cos(x),Math.sin(x),Math.cos(y),Math.sin(y),Math.cos(z),Math.sin(z)];}
-
-  // Analytic ribbon: a continuous three-dimensional surface, with actual normals
-  // and perspective rather than a flat particle/line preset. Periodic deformations
-  // travel around the loop; the pointer orbits it and a tap launches a soft wave.
-  function surface(u,v,t,s,band) {
-    const breath = Math.sin(t*.31+u*3)*.045;
-    const theta = u + .075*Math.sin(u*2-t*.17);
-    const twist = u*1.5 + .30*Math.sin(u*2+t*.18) + .16*Math.sin(t*.22);
-    const width = (band ? .18 : .39) * (1+.16*Math.cos(u*2-t*.2));
-    const radius = 1.17 + .085*Math.sin(u*3+t*.21) + (band ? .13 : 0);
-    const ripple = s.energy * .14 * Math.cos(u*5-s.wave*3.8) * Math.exp(-s.wave*.22);
-    const r = radius + v*width*Math.cos(twist) + breath + ripple;
-    return [r*Math.cos(theta)*1.16,r*Math.sin(theta)*.88,v*width*Math.sin(twist)+.15*Math.sin(u*2-t*.19)+(band?-.13:0)];
+  function layout(s){
+    const r=s.host.getBoundingClientRect();s.w=Math.max(1,r.width);s.h=Math.max(1,r.height);
+    s.compact=s.w<760||coarse.matches;
+    const visual=s.host.querySelector('.hero-visual');
+    if(visual){
+      const a=visual.getBoundingClientRect(),height=Math.max(180,a.height-106);
+      s.art={x:a.left-r.left+a.width*.5,y:a.top-r.top+height*.49,w:Math.min(a.width*.80,height*.88),h:height};
+    }else s.art={x:s.w*.77,y:s.h*.52,w:Math.min(s.w*.36,380),h:s.h};
+    const dpr=Math.min(devicePixelRatio||1,s.compact?1.5:2,2600/s.w);
+    s.canvas.width=Math.round(s.w*dpr);s.canvas.height=Math.round(s.h*dpr);s.ctx.setTransform(dpr,0,0,dpr,0,0);
+    safeDraw(s,0);
   }
-  function metal(normal,v,u,t,band) {
-    let n = normal;
-    if(n[2]<0)n=n.map(x=>-x);
-    const diffuse = Math.max(0,dot(n,keyLight));
-    const fill = Math.max(0,dot(n,fillLight));
-    const specular = Math.pow(Math.max(0,dot(n,halfLight)),34);
-    const fresnel = Math.pow(1-Math.max(0,n[2]),2.5);
-    // Broad environment reflections give satin metal its volume. A narrow softbox
-    // reflection and a teal rim create a distinct edge without using bloom filters.
-    const env = Math.pow(Math.max(0,Math.cos(n[0]*2.7+n[1]*1.9-.5)),8);
-    const strip = Math.pow(Math.max(0,Math.cos(n[0]*5.1-n[1]*1.3+.4)),38);
-    const teal = clamp(.46 + .52*Math.sin(u*1.05+t*.08) + (band?.35:0) - v*.25,0,1);
-    const light = .17 + diffuse*.40 + fill*.12 + env*.47;
-    const base = [mix(194,7,teal),mix(210,141,teal),mix(219,130,teal)];
-    const brightness = 1;
-    return base.map((c,i)=>Math.round(clamp(c*light*brightness+specular*170+strip*65+fresnel*[21,91,83][i],0,255)));
+  function populate(){
+    for(const s of scenes){s.particles=s.kind==='hero'?logoPoints.map(p=>({...p,dx:0,dy:0,vx:0,vy:0})):[];safeDraw(s,0);}
   }
-  function renderSculpture(s,t) {
-    const c=s.ctx,w=s.w,h=s.h,mobile=w<760;
-    const art=s.art;
-    const scale=s.kind==='hero' && art ? Math.min(art.w/3.8,(art.h-108)/2.95) : Math.min(w*.19,h*.49,210);
-    const centerX=s.kind==='hero' && art ? art.x+art.w*.50 : w*.83;
-    const centerY=s.kind==='hero' && art ? art.y+(art.h-108)*.46 : h*.43;
-    const angles=getAngles(.33+Math.sin(t*.15)*.19+(s.py-.5)*.32,-.32+Math.sin(t*.12)*.29+(s.px-.5)*.65,-.56+Math.sin(t*.13)*.14+s.scroll*.18);
-    const size=s.compact?420:720;
-    if(!s.raster || s.raster.size!==size){
-      const canvas=document.createElement('canvas');canvas.width=canvas.height=size;
-      const ctx=canvas.getContext('2d');
-      s.raster={canvas,ctx,size,image:ctx.createImageData(size,size),depth:new Float32Array(size*size)};
-    }
-    const raster=s.raster,data=raster.image.data,zbuf=raster.depth;
-    data.fill(0);zbuf.fill(-100);
-    const N=s.compact?140:224,M=s.compact?20:34, zoom=size/4.4;
-    const project=p=>{const k=4.9/(4.9-p[2]);return [size*.5+p[0]*zoom*k,size*.5+p[1]*zoom*k,p[2]];};
-    // Gouraud rasterization: smooth per-vertex reflections and a depth buffer.
-    // It avoids the visibly faceted, flat-filled polygons of a basic canvas mesh.
-    // Works even when hardware acceleration or WebGL is unavailable.
-    function triangle(a,b,c) {
-      let den=(b[1]-c[1])*(a[0]-c[0])+(c[0]-b[0])*(a[1]-c[1]);
-      if(Math.abs(den)<.001)return;
-      const minX=Math.max(0,Math.floor(Math.min(a[0],b[0],c[0]))),maxX=Math.min(size-1,Math.ceil(Math.max(a[0],b[0],c[0])));
-      const minY=Math.max(0,Math.floor(Math.min(a[1],b[1],c[1]))),maxY=Math.min(size-1,Math.ceil(Math.max(a[1],b[1],c[1])));
-      const ax=(b[1]-c[1])/den,ay=(c[0]-b[0])/den,bx=(c[1]-a[1])/den,by=(a[0]-c[0])/den;
-      const zA=a[2]-c[2],zB=b[2]-c[2],rA=a[3]-c[3],rB=b[3]-c[3],gA=a[4]-c[4],gB=b[4]-c[4],bA=a[5]-c[5],bB=b[5]-c[5];
-      let rowA=ax*(minX+.5-c[0])+ay*(minY+.5-c[1]),rowB=bx*(minX+.5-c[0])+by*(minY+.5-c[1]);
-      for(let y=minY;y<=maxY;y++,rowA+=ay,rowB+=by){
-        let wa=rowA,wb=rowB,offset=y*size+minX;
-        for(let x=minX;x<=maxX;x++,offset++,wa+=ax,wb+=bx){
-          if(wa<-.001||wb<-.001||wa+wb>1.001)continue;
-          const z=c[2]+wa*zA+wb*zB;if(z<=zbuf[offset])continue;zbuf[offset]=z;
-          const i=offset*4;data[i]=c[3]+wa*rA+wb*rB;data[i+1]=c[4]+wa*gA+wb*gB;data[i+2]=c[5]+wa*bA+wb*bB;data[i+3]=255;
-        }
+  // Sample the supplied transparent mark, preserving its exact silhouette and colors.
+  // Reading the existing image also works in the self-contained offline build.
+  const logo=document.querySelector('.brand img');
+  function sampleLogo(){
+    try{
+      const mask=document.createElement('canvas');mask.width=200;mask.height=Math.round(200*logo.naturalHeight/logo.naturalWidth);
+      const ctx=mask.getContext('2d',{willReadFrequently:true});ctx.drawImage(logo,0,0,mask.width,mask.height);
+      const data=ctx.getImageData(0,0,mask.width,mask.height).data;
+      for(let y=0;y<mask.height;y+=2)for(let x=0;x<mask.width;x+=2){
+        const i=(y*mask.width+x)*4,r=data[i],g=data[i+1],b=data[i+2];
+        if(data[i+3]<170||Math.max(r,g,b)<48)continue;
+        const teal=g>r*1.2&&b>r*1.1;
+        logoPoints.push({u:(x-mask.width/2)/mask.width,v:(y-mask.height/2)/mask.width,phase:random()*TAU,size:.7+random()*.65,light:.5+Math.max(r,g,b)/510,color:teal?'72,239,218':y<mask.height*.3?'207,229,255':'153,211,225'});
       }
-    }
-    for(let band=0;band<1;band++){
-      const grid=[];
-      for(let i=0;i<=N;i++){
-        const row=[];for(let j=0;j<=M;j++)row.push(rotation(surface(i/N*TAU,j/M*2-1,t,s,band),angles));grid.push(row);
-      }
-      const verts=[];
-      for(let i=0;i<=N;i++){
-        const row=[];
-        for(let j=0;j<=M;j++){
-          const a=grid[Math.max(0,i-1)][j],b=grid[Math.min(N,i+1)][j],d=grid[i][Math.max(0,j-1)],e=grid[i][Math.min(M,j+1)];
-          const n=normalize(cross(b.map((x,k)=>x-a[k]),e.map((x,k)=>x-d[k])));
-          const col=metal(n,j/M*2-1,i/N*TAU,t,band);
-          row.push([...project(grid[i][j]),...col]);
-        }verts.push(row);
-      }
-      for(let i=0;i<N;i++)for(let j=0;j<M;j++){
-        const a=verts[i][j],b=verts[i+1][j],c=verts[i+1][j+1],d=verts[i][j+1];triangle(a,b,c);triangle(a,c,d);
-      }
-    }
-    raster.ctx.putImageData(raster.image,0,0);
-    c.imageSmoothingEnabled=true;c.imageSmoothingQuality='high';
-    const extent=scale*4.4;
-    c.drawImage(raster.canvas,centerX-extent*.5,centerY-extent*.5,extent,extent);
+      populate();
+    }catch(error){console.warn('Phoenix Galaxy could not sample the logo.',error);scenes.forEach(s=>{s.host.dataset.motionError='logo';});}
   }
-  function glow(c,x,y,r,rgba) {
-    const g=c.createRadialGradient(x,y,0,x,y,r);g.addColorStop(0,rgba);g.addColorStop(1,'rgba(3,13,17,0)');
-    c.fillStyle=g;c.fillRect(x-r,y-r,r*2,r*2);
-  }
-  // A quiet sheet of moving light links the hero sculpture to the process and close.
-  function renderTide(s,t) {
-    const c=s.ctx,w=s.w,h=s.h, count=s.compact?25:44;
-    const process=s.kind==='process';
-    for(let i=0;i<count;i++) {
-      const v=i/(count-1), phase=t*.24+s.phase;
-      const g=c.createLinearGradient(0,0,w,h);
-      g.addColorStop(0,'rgba(24,86,83,0)');g.addColorStop(.45,`rgba(49,156,137,${.07+v*.10})`);g.addColorStop(.75,`rgba(134,226,201,${.09+v*.15})`);g.addColorStop(1,'rgba(30,95,90,0)');
-      c.strokeStyle=g;c.lineWidth=.7;c.beginPath();
-      for(let j=0;j<=80;j++){
-        const u=j/80;let x=u*w;
-        let y=h*(process?.83:.91)+Math.sin(u*4.7-phase)*h*.1+(v-.5)*h*.23*Math.sin(u*3.8+phase*.4);
-        y+=(s.py-.5)*22*Math.sin(u*Math.PI)+s.scroll*25;
-        if(j===0)c.moveTo(x,y);else c.lineTo(x,y);
-      }c.stroke();
-    }
-  }
-  function draw(s,t) {
-    if(!s.w||!s.h||s.failed)return;
-    const c=s.ctx,w=s.w,h=s.h;
+  function draw(s,dt){
+    if(s.failed||!s.w)return;
+    const c=s.ctx,w=s.w,h=s.h,a=s.art,hero=s.kind==='hero';
     c.clearRect(0,0,w,h);
-    const mobile=w<760;
-    glow(c,w*(mobile?.55:.77),h*(mobile?.69:.39),Math.min(w*.50,h*.65),'rgba(15,116,105,.21)');
-    glow(c,w*.99,h*.02,Math.min(w*.4,400),'rgba(45,83,100,.10)');
-    c.save();c.globalAlpha=s.kind==='hero'?1:s.kind==='contact'?.58:.18;
-    renderSculpture(s,t);c.restore();
-    renderTide(s,t);
+    const pulse=.88+Math.sin(time*.27)*.12;
+    glow(c,a.x-w*.04,a.y,a.w*.92,a.h*.7,`rgba(51,32,115,${.32*pulse})`);
+    glow(c,a.x+a.w*.27,a.y+a.h*.16,a.w*.66,a.h*.52,'rgba(0,131,132,.21)');
+    glow(c,a.x-a.w*.24,a.y-a.h*.20,a.w*.50,a.h*.43,'rgba(62,87,168,.19)');
+    // Sparse drifting field across the scene; keep the text side deliberately quiet.
+    for(let i=0;i<(s.compact?300:stars.length);i++){
+      const p=stars[i],x=(p.u*w+time*(1+p.depth*3))%w,y=p.v*h+Math.sin(time*.18+p.phase)*5;
+      const alpha=(.24+.44*(.5+.5*Math.sin(time*(.6+p.depth)+p.phase)))*(hero&&x<w*.48?.23:hero?1:.42);
+      c.fillStyle=`rgba(${p.tone>.8?'153,138,239':p.tone>.5?'104,218,220':'210,228,255'},${alpha})`;
+      c.fillRect(x,y,p.size,p.size);
+      if(p.depth>.97){c.globalAlpha=alpha*.6;c.fillRect(x-2,y+.5,p.size+4,.6);c.fillRect(x+.5,y-2,.6,p.size+4);c.globalAlpha=1;}
+    }
+    if(hero){
+      c.save();c.globalCompositeOperation='lighter';
+      // A tilted galaxy of fine dust wraps the mark without obscuring its shape.
+      for(let i=0;i<(s.compact?500:dust.length);i++){
+        const p=dust[i],angle=p.angle+time*.035,r=p.radius;
+        const xx=Math.cos(angle)*a.w*.80*r,yy=Math.sin(angle)*a.w*.33*r;
+        const x=a.x+xx*.91+yy*.42,y=a.y-xx*.42+yy*.91;
+        c.fillStyle=`rgba(${i%3?'112,156,227':'97,245,220'},${(.12+.24*(.5+.5*Math.sin(p.phase+time*.8)))*(1-r*.45)})`;
+        c.fillRect(x,y,p.size,p.size);
+      }
+      const size=a.w,step=dt*60,radius=s.compact?72:110;
+      let displacement=0,affected=0;
+      for(const p of s.particles){
+        const bx=a.x+p.u*size+Math.sin(time*.65+p.phase)*1.3;
+        const by=a.y+p.v*size+Math.sin(time*.48)*5+Math.cos(time*.55+p.phase)*1.3;
+        if(dt){
+          if(s.pointerActive){
+            const dx=bx+p.dx-s.mx,dy=by+p.dy-s.my,d=Math.hypot(dx,dy);
+            if(d<radius){const force=(1-d/radius)*2.8,angle=d<.1?p.phase:Math.atan2(dy,dx);p.vx+=Math.cos(angle)*force*step;p.vy+=Math.sin(angle)*force*step;affected++;}
+          }
+          p.vx+=-p.dx*.022*step;p.vy+=-p.dy*.022*step;
+          const damping=Math.pow(.86,step);p.vx*=damping;p.vy*=damping;p.dx+=p.vx*step;p.dy+=p.vy*step;
+        }
+        const offset=Math.hypot(p.dx,p.dy);displacement=Math.max(displacement,offset);
+        const shimmer=.70+.30*Math.sin(time*1.3+p.phase),pixel=(s.compact?1.35:1.65)*p.size;
+        const alpha=Math.min(1,p.light*shimmer+.20);
+        const x=bx+p.dx,y=by+p.dy;
+        c.fillStyle=`rgba(${p.color},${alpha*.09})`;c.fillRect(x-2,y-2,pixel+4,pixel+4);
+        c.fillStyle=`rgba(${offset>10?'143,246,255':p.color},${alpha})`;c.fillRect(x,y,pixel,pixel);
+        if(p.size>1.31){c.fillStyle=`rgba(225,250,255,${alpha*.65})`;c.fillRect(x-2,y+pixel*.5,pixel+4,.7);c.fillRect(x+pixel*.5,y-2,.7,pixel+4);}
+      }
+      s.displacement=displacement;s.affected=affected;c.restore();
+    }
     s.frames++;draws++;
   }
-  function safeDraw(s,t){try{draw(s,t);}catch(e){s.failed=true;s.host.dataset.motionError='render';console.warn('Phoenix Flow uses the static fallback.',e);}}
-  function resize(s) {
-    const r=s.host.getBoundingClientRect();s.w=Math.max(r.width,1);s.h=Math.max(r.height,1);
-    const visual=s.host.querySelector('.hero-visual');
-    if(visual){const a=visual.getBoundingClientRect();s.art={x:a.left-r.left,y:a.top-r.top,w:a.width,h:a.height};}
-    s.compact=coarse.matches||s.w<760;
-    const dpr=Math.min(devicePixelRatio||1,s.compact?1.25:1.5,2400/s.w);
-    s.canvas.width=Math.round(s.w*dpr);s.canvas.height=Math.round(s.h*dpr);s.ctx.setTransform(dpr,0,0,dpr,0,0);
-    safeDraw(s,time);
-  }
-  function tick(now) {
+  function safeDraw(s,dt){try{draw(s,dt);}catch(error){s.failed=true;s.host.dataset.motionError='render';console.warn('Phoenix Galaxy rendering failed.',error);}}
+  function tick(now){
     frame=0;if(!allowed())return;
-    const target=scenes.some(s=>s.visible&&s.compact)?1000/24:1000/30;
-    if(last&&now-last<target-1){frame=requestAnimationFrame(tick);return;}
-    const dt=last?Math.min((now-last)/1000,.12):1/30;last=now;time+=dt;
-    for(const s of scenes)if(s.visible&&!s.failed){
-      const blend=1-Math.exp(-dt*3.4);s.px+=(s.tx-s.px)*blend;s.py+=(s.ty-s.py)*blend;
-      s.energy*=Math.exp(-dt*.8);s.wave+=dt;s.scroll+=(s.targetScroll-s.scroll)*blend;
-      safeDraw(s,time);
-    }
+    if(last&&now-last<1000/30-1){frame=requestAnimationFrame(tick);return;}
+    const dt=last?Math.min((now-last)/1000,.05):1/30;last=now;time+=dt;
+    for(const s of scenes)if(s.visible&&!s.failed)safeDraw(s,dt);
     if(scenes.some(s=>s.visible&&!s.failed))frame=requestAnimationFrame(tick);
   }
-  function on(target,event,callback,options){target.addEventListener(event,callback,options);cleanups.push(()=>target.removeEventListener(event,callback,options));}
-  const observer='IntersectionObserver' in window ? new IntersectionObserver(entries=>{
-    for(const e of entries){const s=scenes.find(x=>x.host===e.target);if(s)s.visible=e.isIntersecting;}
+  const observer='IntersectionObserver' in window?new IntersectionObserver(entries=>{
+    for(const e of entries){const s=scenes.find(s=>s.host===e.target);if(s){s.visible=e.isIntersecting;if(!s.visible)s.pointerActive=false;}}
     if(scenes.some(s=>s.visible))start();else stop();
   },{threshold:.005}):null;
-  for(const [selector,kind,phase] of [['.hero','hero',0],['#process','process',1.2],['#contact','contact',2.4]]){
+  for(const [selector,kind] of [['.hero','hero'],['#process','process'],['#contact','contact']]){
     const host=document.querySelector(selector);if(!host)continue;
     const canvas=document.createElement('canvas');canvas.className='ambient-canvas';canvas.setAttribute('aria-hidden','true');
     const ctx=canvas.getContext('2d',{alpha:true});if(!ctx)continue;
-    const s={host,canvas,ctx,kind,phase,w:0,h:0,px:.5,py:.5,tx:.5,ty:.5,energy:0,wave:0,scroll:0,targetScroll:0,frames:0,visible:false,failed:false};
-    host.classList.add('ambient-scene');host.dataset.motionVersion=VERSION;host.prepend(canvas);scenes.push(s);
-    const bounds=host.getBoundingClientRect();s.visible=bounds.bottom>0&&bounds.top<innerHeight;
-    resize(s);
-    on(host,'pointermove',e=>{
-      if(!allowed()||e.pointerType==='touch')return;
-      // Read current geometry so hover stays accurate after layout shifts/scroll.
-      const r=host.getBoundingClientRect();s.tx=clamp((e.clientX-r.left)/r.width,0,1);s.ty=clamp((e.clientY-r.top)/r.height,0,1);
-    },{passive:true});
-    on(host,'pointerleave',()=>{s.tx=.5;s.ty=.5;},{passive:true});
-    on(host,'pointerdown',e=>{
-      if(!allowed()||e.target.closest(interactive))return;
-      const r=host.getBoundingClientRect();s.tx=clamp((e.clientX-r.left)/r.width,0,1);s.ty=clamp((e.clientY-r.top)/r.height,0,1);s.energy=1;s.wave=0;
-    },{passive:true});
-    on(host,'pointerup',e=>{if(e.pointerType==='touch'){s.tx=.5;s.ty=.5;}},{passive:true});
+    const r=host.getBoundingClientRect();
+    const s={host,canvas,ctx,kind,w:0,h:0,art:null,particles:[],pointerActive:false,mx:0,my:0,displacement:0,affected:0,frames:0,failed:false,visible:r.bottom>0&&r.top<innerHeight};
+    host.classList.add('ambient-scene');host.dataset.motionVersion=VERSION;host.prepend(canvas);scenes.push(s);layout(s);
+    function pointer(e){
+      if(!allowed()||e.target.closest(interactive)){s.pointerActive=false;return;}
+      const r=host.getBoundingClientRect();s.mx=e.clientX-r.left;s.my=e.clientY-r.top;s.pointerActive=true;
+    }
+    on(host,'pointermove',pointer,{passive:true});on(host,'pointerdown',pointer,{passive:true});
+    on(host,'pointerleave',()=>{s.pointerActive=false;},{passive:true});
+    on(host,'pointerup',e=>{if(e.pointerType==='touch')s.pointerActive=false;},{passive:true});
+    on(host,'pointercancel',()=>{s.pointerActive=false;},{passive:true});
     if(observer)observer.observe(host);
-    if('ResizeObserver' in window){const ro=new ResizeObserver(()=>resize(s));ro.observe(host);cleanups.push(()=>ro.disconnect());}
+    if('ResizeObserver' in window){const ro=new ResizeObserver(()=>layout(s));ro.observe(host);cleanups.push(()=>ro.disconnect());}
   }
-  const hero=document.querySelector('.hero');
   if(!scenes.length)return;
-  hero.append(control);
-  // The hint is an affordance for the requested interaction, not a fake status badge.
-  const hint=document.createElement('span');hint.className='motion-hint';hint.setAttribute('aria-hidden','true');hint.textContent=coarse.matches?'Touch to set it in motion':'Move to explore · Click to ripple';hero.append(hint);
-  let scrollQueued=false;
-  on(window,'scroll',()=>{if(scrollQueued)return;scrollQueued=true;requestAnimationFrame(()=>{
-    scrollQueued=false;for(const s of scenes){const r=s.host.getBoundingClientRect();s.targetScroll=clamp((innerHeight-r.top)/(innerHeight+s.h),0,1);}
-  });},{passive:true});
-  if(!('ResizeObserver' in window))on(window,'resize',()=>scenes.forEach(resize),{passive:true});
+  const hero=document.querySelector('.hero');hero.append(control);
+  const hint=document.createElement('span');hint.className='motion-hint';hint.setAttribute('aria-hidden','true');
+  function updateHint(){hint.textContent=coarse.matches?'Touch the stardust':'Move through the stardust';}
+  updateHint();hero.append(hint);
+  if(!('ResizeObserver' in window))on(window,'resize',()=>scenes.forEach(layout),{passive:true});
   const dialogs=new MutationObserver(()=>{modalOpen=Boolean(document.querySelector('dialog[open]'));sync();});
   document.querySelectorAll('dialog').forEach(d=>dialogs.observe(d,{attributes:true,attributeFilter:['open']}));
   on(document,'visibilitychange',()=>{visiblePage=!document.hidden;sync();});
-  on(reduced,'change',()=>{reducedOverride=false;sync();scenes.forEach(s=>safeDraw(s,time));});
-  on(coarse,'change',()=>scenes.forEach(resize));
+  on(coarse,'change',()=>{updateHint();scenes.forEach(layout);});
   on(window,'pagehide',stop);on(window,'pageshow',sync);
-  window.PTR_MOTION={
-    version:VERSION,
-    pause,resume,
-    get status(){return {version:VERSION,paused:userPaused,reduced:reduced.matches,running:allowed()&&Boolean(frame),frames:draws,active:scenes.filter(s=>s.visible).length,scenes:scenes.map(s=>({kind:s.kind,frames:s.frames,visible:s.visible,failed:s.failed,pointer:[s.px,s.py],energy:s.energy}))};},
-    destroy(){stop();observer?.disconnect();dialogs.disconnect();cleanups.forEach(fn=>fn());scenes.forEach(s=>{s.canvas.remove();s.host.classList.remove('ambient-scene');delete s.host.dataset.motionVersion;});control.remove();hint.remove();delete window.PTR_MOTION;}
+  if(logo?.complete&&logo.naturalWidth)sampleLogo();else if(logo)on(logo,'load',sampleLogo,{once:true});
+  window.PTR_MOTION={version:VERSION,pause,resume,
+    get status(){return{version:VERSION,shape:'logo-pixels',paused:userPaused,running:allowed()&&Boolean(frame),frames:draws,logoPoints:logoPoints.length,active:scenes.filter(s=>s.visible).length,scenes:scenes.map(s=>({kind:s.kind,frames:s.frames,visible:s.visible,failed:s.failed,particles:s.particles.length,pointerActive:s.pointerActive,displacement:s.displacement,affected:s.affected}))};},
+    destroy(){stop();observer?.disconnect();dialogs.disconnect();cleanups.forEach(fn=>fn());scenes.forEach(s=>{s.canvas.remove();s.host.classList.remove('ambient-scene');delete s.host.dataset.motionVersion;});control.remove();hint.remove();delete document.documentElement.dataset.ambientMotion;delete window.PTR_MOTION;}
   };
   sync();
 })();

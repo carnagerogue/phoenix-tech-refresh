@@ -1,6 +1,6 @@
 # Phoenix Tech Refresh
 
-Complete executive-review homepage for **Phoenix Tech Refresh, an iT1 company**, with the approved Premium Corporate #2 identity and the original interactive **Phoenix Flow 2** background.
+Complete executive-review homepage for **Phoenix Tech Refresh, an iT1 company**, with the approved Premium Corporate #2 identity and the original interactive **Phoenix Galaxy** background.
 
 ## Website
 
@@ -8,7 +8,7 @@ https://carnagerogue.github.io/phoenix-tech-refresh/
 
 The current branch-based GitHub Pages configuration publishes `main` directly. The root homepage explicitly includes versioned `motion.css` and `motion.js`. The static build validates those same imports, so the source and built websites cannot silently diverge into animated and non-animated versions.
 
-Check the successful Pages deployment and **Verify homepage and published motion** workflow before treating a source commit as live. That verification workflow tests actual rendered pixel changes, interaction, pause/resume, reduced motion, and existing website controls on both a local HTTP build and the real Pages URL. Browser evidence is saved as a workflow artifact.
+Check the successful Pages deployment and **Verify homepage and published motion** workflow before treating a source commit as live. That verification workflow tests actual rendered pixel changes, particle interaction, pause/resume, autoplay with reduced motion enabled, and existing website controls on both a local HTTP build and the real Pages URL. Browser evidence is saved as a workflow artifact.
 
 The alternate `.github/workflows/pages.yml` publisher is manual-only for an eventual switch to GitHub Actions as the Pages source. Do not run competing publishing methods concurrently. `_config.yml` excludes development and review documents from the branch-published website. Repository visibility is controlled by the owner and is not changed by these workflows. `noindex` is not access control; the executive preview is not authenticated.
 
@@ -33,7 +33,7 @@ The original copy, content, illustrations, cookies, and legal review drafts rema
 - Local-only project summary with validation; email draft opens only on user action.
 - Working privacy preferences, no installed analytics or advertising vendors.
 - Privacy, Terms of Use, Cookie Policy, and Accessibility review drafts.
-- Original reflective 3D ribbon with pointer orbit, click/touch ripples, scroll response, pause/resume, reduced-motion defaults with an explicit Play animation option, and offscreen/dialog/hidden-tab suspension.
+- Animated galaxy of silver and teal pixels sampled from the approved logo, with drifting stars and nebula light. Mouse/touch scatters the pixels, which spring back into the mark. Autoplay starts on every load, including reduced-motion browsers; manual pause and offscreen/dialog/hidden-tab suspension remain available.
 
 ## Scope and launch gates
 
@@ -49,4 +49,4 @@ The website has no Playwright runtime dependency. CI installs pinned Python Play
 python tests/motion_smoke.py --url http://127.0.0.1:4173 --output /tmp/phoenix-qa
 ```
 
-The local assistant sandbox blocks browser URL navigation; its standalone-HTML test is not a substitute for the separate hosted CI test. Passing these checks is not a formal accessibility, security, privacy, or Core Web Vitals audit.
+Verification navigates both the local HTTP build and the published GitHub Pages site. Passing these checks is not a formal accessibility, security, privacy, or Core Web Vitals audit.
