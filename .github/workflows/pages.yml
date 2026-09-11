@@ -1,8 +1,6 @@
-name: Publish executive preview
+name: Publish executive preview (manual Actions source)
 
 on:
-  push:
-    branches: [main]
   workflow_dispatch:
 
 permissions:

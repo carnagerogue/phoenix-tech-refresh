@@ -1,0 +1,13 @@
+# Branch-based Pages serves index.html directly. It now includes motion explicitly.
+# Do not turn internal review documents into public website pages.
+exclude:
+  - docs
+  - tests
+  - README.md
+  - package.json
+  - package-lock.json
+  - build.mjs
+  - serve.mjs
+  - dist
+  - node_modules
+  - .github

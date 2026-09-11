@@ -1,38 +1,23 @@
-# GitHub Pages deployment
+# Website deployment
 
-This repository contains the complete static executive-review homepage, not just a README or project plan. `_site` is the publishing artifact; source and internal documents remain separate.
+## Current publishing mode
 
-## One-time administrator setting
+GitHub's branch-based Pages workflow publishes `main`. This was confirmed from successful workflow run 34566459023, which ran Build with Jekyll and deployed the source homepage. The root `index.html` now directly loads the versioned motion stylesheet and script, fixing the previous dependency on build-time insertion.
 
-1. Open `https://github.com/carnagerogue/phoenix-tech-refresh/settings/pages`.
-2. Under Build and deployment, select **GitHub Actions** as Source.
-3. Open Actions → **Publish executive preview** → Run workflow on `main`.
-4. Wait for both build and deploy to succeed. Open the URL in the `github-pages` deployment.
+No Pages settings or repository visibility changes are required for this animation update. The owner controls those settings. The alternate custom Pages workflow is manual-only to avoid two automatic publishers competing for the same environment.
 
-Expected URL: `https://carnagerogue.github.io/phoenix-tech-refresh/`.
+## Public website
 
-Do not treat the expected URL as proof of deployment. Check the actual successful deployment output. A missing-site error in Configure Pages usually means step 2 has not been completed or the account/repository is not eligible.
+https://carnagerogue.github.io/phoenix-tech-refresh/
 
-## Repository visibility and privacy
+After a push, check the Pages deployment for that commit and the Verify homepage and published motion workflow. The latter waits for the versioned animation imports, then opens the real website in Chromium and verifies actual changing pixels, pointer/click interaction, pause/resume, reduced motion, dialogs, core controls, and responsive layouts. Screenshots and JSON results are stored in the workflow artifact `phoenix-motion-browser-evidence` for seven days.
 
-The workflow does not change the repository from private to public. GitHub Pages for private personal repositories needs an eligible paid plan. Do not change source visibility merely to remove this restriction without the owner's explicit approval.
+The website is an executive preview. Noindex discourages indexing but provides no authentication. Do not publish sensitive client records or confidential documents. The Jekyll configuration excludes development and review documentation from website routes; the explicit Node build allowlist does the same for `_site`.
 
-A public Pages deployment is accessible to visitors even when its source repository is private. `noindex,nofollow`, executive-preview labels, and an unadvertised link do not restrict access. No production customer data or credentials belong in this preview.
+## Optional future Actions-source publishing
 
-The build copies only HTML, CSS, JavaScript, and the three website image assets. It does not publish `docs`, Git history, environment files, or other repository content. The exposed legal dialogs are explicitly review drafts.
+When intentionally switching the repository's Pages source to GitHub Actions, use the manual Publish executive preview workflow to deploy `_site`. Re-enable its push trigger only as part of that source change. Both source and built entry points contain the same animation imports.
 
-## Automatic updates
+## Production boundaries
 
-A push to `main` triggers the workflow after initial enablement. Third-party actions are pinned to verified commit SHAs. Only the deployment job has Pages-write and identity-token permissions; neither job has repository-content write permission. No custom secret or personal token is required for an already-enabled Pages site.
-
-GitHub Pages is static hosting. It does not connect the sample portal to real customer data or convert the local inquiry flow into a submitted quote. Local-server security headers are not automatically applied by Pages. Review the actual hosting data practices and controls before a production release.
-
-## Offline fallback
-
-Run `npm run standalone` and open `dist/Phoenix_Tech_Refresh_Animated_Preview.html` in a browser. No network or installation is required by that exported file.
-
-## Official references
-
-- https://docs.github.com/en/pages/getting-started-with-github-pages/using-custom-workflows-with-github-pages
-- https://docs.github.com/en/pages/getting-started-with-github-pages/configuring-a-publishing-source-for-your-github-pages-site
-- https://github.com/actions/configure-pages/blob/main/action.yml
+The portal, project form, company claims, and legal policy drafts retain their existing executive-preview limitations. Hosting the page does not connect a CRM, authenticate users, approve legal content, or complete the multi-page production website.

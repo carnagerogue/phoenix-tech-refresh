@@ -1,29 +1,31 @@
-# Phoenix Flow — interactive background
+# Phoenix Flow 2
 
-## Direction
+## Fix to the published homepage
 
-Original ambient artwork for Phoenix Tech Refresh: silver and teal filaments form slowly folding ribbons against graphite. It carries the Premium Corporate #2 material language through the hero, lifecycle, and final invitation, while retaining the homepage's existing copy, assets, hierarchy, and working controls.
+The site was published by GitHub's branch-based Jekyll workflow. The previous source `index.html` did not load `motion.css` or `motion.js`; only `build.mjs` inserted them. Consequently a successful branch deployment could publish a completely static hero.
 
-The user referenced https://openai.com/index/gpt-6-astra/ for an immersive, interactive background. Its article was readable, but managed-browser policy blocked direct animated-page inspection. This is an original interpretation of that requested experience, not a verified reproduction of the reference's animation or source code.
+The source homepage now explicitly includes both assets, with version `2.0.0` cache keys. The static build validates those imports and copies them unchanged. Both publishing paths render the same experience. `_config.yml` excludes development and review documents from the branch-published website. The alternate Actions publisher is manual-only, preventing two publishing workflows from competing automatically. No repository visibility or account settings are changed by this update.
 
-## Interaction
+## Art direction
 
-Pointer movement influences the local weave with smoothed movement. A background click or tap produces a restrained pulse. Scroll position alters the ribbon curvature. Links, buttons, inputs, dialogs, and disclosure controls retain their normal behavior; the canvas does not capture clicks or hijack scrolling.
+Replace the faint wire-like backdrop with a single sculpted, reflective silver-and-teal ribbon loop, deliberately recalling the approved metallic identity and the equipment lifecycle. It has a real parametric 3D surface, perspective, continuous normals, a depth buffer, and smoothly interpolated reflections. Rendering uses the local Canvas 2D API, including a bounded software surface renderer, so it does not require WebGL, a GPU driver, a third-party library, video, or a network service.
 
-A labeled Pause/Resume control is keyboard-operable. OS reduced-motion switches the artwork to a static composition and explains the setting. Optional animation pauses when scenes are offscreen, the page is hidden, or a dialog is open. The control changes all three scenes together; its setting is kept only in current-page memory.
+The hero keeps its original copy, navigation, CTA labels, colors, and human-accountability message. The illustrative technician image becomes a small supporting proof tile, making room for the artwork instead of covering it. A subtle flowing light sheet links the hero, process, and closing invitation; the latter two keep the sculpture low-contrast behind the content. No company capability, legal, certification, customer, or impact claims are added.
 
-## Technical boundaries
+## Interaction and accessibility
 
-Canvas 2D, no external runtime, video, remote assets, telemetry, or storage. Decorative canvases are hidden from assistive technology. The existing no-tracking privacy behavior is unchanged. Pixel density, strand count, and sampling are capped; compact devices receive a simpler weave. The scheduler targets roughly 30 redraws per second, not a guaranteed measured frame rate on every device. The original readable page remains when the canvas cannot be initialized.
+- Autonomous slow folding and shifting reflections, not a static image.
+- Pointer-relative orbit with eased movement.
+- Background click/touch creates a traveling deformation; controls and forms do not trigger it.
+- Scroll changes the composition subtly, without hijacking navigation or scrolling.
+- Keyboard-accessible Pause/Resume control; no persistence or tracking.
+- Reduced-motion preference displays the sculpted still and disables autonomous animation.
+- Animation suspends offscreen, in background tabs, and behind native dialogs.
+- Decorative canvases are hidden from the accessibility tree and cannot capture pointer events.
+- Desktop rendering is capped near 30 updates/second, touch/small-screen rendering near 24; smaller meshes and raster buffers are used on compact devices. These are scheduling limits, not promised device-specific performance.
 
 ## Verification
 
-35 recorded checks passed in Playwright/Chromium after the final build: original heading and page identity; three scenes; advancing frames; pointer-driven exploration; pause state and keyboard resume; paused rendering behind dialogs; form validation and local review; service navigation/explorer; lifecycle updates; demo portal filtering/export; all four legal documents; cookie preferences; offscreen rendering suspension; no horizontal overflow at 1920, 1440, 1280, 768, 390, and 320 pixels; static reduced-motion rendering and live preference updates; no JavaScript errors or external HTTP requests from the standalone build.
+`tests/motion_smoke.py` checks actual pixel changes (not only a running counter), pointer response, ripple response, pause/resume, reduced motion, dialog suspension, offscreen suspension, existing forms and content controls, and layout widths 320–1920px. It writes JSON and browser screenshots outside the source tree.
 
-The Browser plugin was unavailable. HTTP/file navigation was blocked by the managed Chromium environment, so the standalone document was rendered using `set_content`. Native hosted storage persistence, real email-client behavior, other browser engines, and public deployment were not established by this run. The opaque origin correctly exercised the existing blocked-storage fallback.
-
-Visual review compared the original desktop preview and the updated hero, lifecycle, and mobile screenshots. Copy, logo, typography, clean-white content sections, graphite/teal palette, image placement, and component geometry remain consistent. Intentional changes: additive background ribbons; a small motion control; extra top spacing on compact screens for that control. The logo asset was compressed to a high-quality WebP rendition rather than replaced with a different mark.
-
-A build defect found during testing was corrected: injecting script text into standalone HTML now uses replacement callbacks, preserving literal dollar signs in the original JavaScript. The complete interaction regression suite passed after that fix.
-
-No formal WCAG conformance, performance-score, legal-compliance, or security-audit claim is made.
+Local sandbox verification uses standalone HTML because the available browser blocks URL navigation. The GitHub verification workflow separately navigates the built HTTP site and the real public Pages URL. Check the workflow result and its screenshot artifact before claiming hosted verification. The initial local Flow 2 run passed 35 checks with no page errors; this is not a formal accessibility, privacy, security, or Core Web Vitals audit.

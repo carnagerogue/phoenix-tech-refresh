@@ -1,64 +1,52 @@
 # Phoenix Tech Refresh
 
-Complete executive-review homepage for **Phoenix Tech Refresh, an iT1 company**. The approved Premium Corporate #2 logo anchors a graphite, silver, white, and teal identity, with the original **Phoenix Flow** interactive background.
+Complete executive-review homepage for **Phoenix Tech Refresh, an iT1 company**, with the approved Premium Corporate #2 identity and the original interactive **Phoenix Flow 2** background.
 
-## View the website
+## Website
 
-GitHub Pages is prepared through `.github/workflows/pages.yml`. A repository administrator must enable **Settings → Pages → Build and deployment → Source: GitHub Actions**. Then run **Publish executive preview** from the Actions tab. The workflow's deployment output is the authoritative live URL; a committed workflow alone does not mean a site is live.
+https://carnagerogue.github.io/phoenix-tech-refresh/
 
-Expected project URL after successful deployment:
+The current branch-based GitHub Pages configuration publishes `main` directly. The root homepage explicitly includes versioned `motion.css` and `motion.js`. The static build validates those same imports, so the source and built websites cannot silently diverge into animated and non-animated versions.
 
-`https://carnagerogue.github.io/phoenix-tech-refresh/`
+Check the successful Pages deployment and **Verify homepage and published motion** workflow before treating a source commit as live. That verification workflow tests actual rendered pixel changes, interaction, pause/resume, reduced motion, and existing website controls on both a local HTTP build and the real Pages URL. Browser evidence is saved as a workflow artifact.
 
-The source repository remains private. GitHub Pages from a private personal repository requires an eligible GitHub plan, and the published Pages site is normally public. This workflow never changes repository visibility. Executive-preview labels and `noindex` discourage indexing but are not authentication or access control.
+The alternate `.github/workflows/pages.yml` publisher is manual-only for an eventual switch to GitHub Actions as the Pages source. Do not run competing publishing methods concurrently. `_config.yml` excludes development and review documents from the branch-published website. Repository visibility is controlled by the owner and is not changed by these workflows. `noindex` is not access control; the executive preview is not authenticated.
 
-## Local preview
+## Local development
 
-Node.js 20 or later; no packages, credentials, or dependency installation required.
-
-```sh
-npm start
-```
-
-Open `http://127.0.0.1:4173`. The server builds and serves `_site`, not the source template.
+Node.js 20 or later. No runtime packages, credentials, or installation are required.
 
 ```sh
-npm run check       # JavaScript syntax checks
-npm run build       # Complete static site in _site/
-npm run standalone  # Also creates dist/Phoenix_Tech_Refresh_Animated_Preview.html
+npm start          # Build and serve at http://127.0.0.1:4173
+npm run check      # JavaScript syntax checks
+npm run build      # Complete static site in _site/
+npm run standalone # Self-contained offline HTML in dist/
 ```
 
-The standalone HTML includes all styles, scripts, images, and animation for offline executive review. Open that file in a current desktop browser. The repository-root `index.html` is the original source template: the build adds `motion.css` and `motion.js` without changing its content or layout.
+The original copy, content, illustrations, cookies, and legal review drafts remain in place. The hero gives the dimensional artwork room to breathe, with the technician illustration retained as a small supporting tile. See `docs/MOTION_DESIGN.md` for the published-animation fix and intentional design changes.
 
 ## Included experience
 
-- Complete desktop-first homepage, approved logo, and iT1 parent identification.
-- Eight services, six lifecycle stages, six industry perspectives, three editorial guides, FAQs, and inquiry flow.
-- Synthetic client-portal records with search, status filtering, CSV exports, and sample documents.
-- Privacy, Terms of Use, Cookie Policy, Accessibility, and preference controls.
-- Phoenix Flow: local Canvas artwork with slow teal/silver ribbons, pointer response, background-click/tap pulses, and scroll-responsive curvature in the hero, lifecycle, and closing invitation.
-- Pause/resume control; OS reduced-motion alternative; suspended rendering offscreen, behind dialogs, and when the tab is hidden.
+- Approved Premium Corporate #2 logo and iT1 parent-company identification.
+- Eight services, six-step lifecycle, industry perspectives, resource guides, and FAQs.
+- Synthetic client-portal records, asset search, document examples, and sample exports.
+- Local-only project summary with validation; email draft opens only on user action.
+- Working privacy preferences, no installed analytics or advertising vendors.
+- Privacy, Terms of Use, Cookie Policy, and Accessibility review drafts.
+- Original reflective 3D ribbon with pointer orbit, click/touch ripples, scroll response, pause/resume, reduced-motion support, and offscreen/dialog/hidden-tab suspension.
 
-## Boundaries
+## Scope and launch gates
 
-This is the full interactive homepage preview, **not the full multi-page production release, an authenticated portal, or a connected CRM**. Inquiries are prepared in the browser, not submitted. Email drafts open only on an explicit user action. Demonstration assets and recovery values are synthetic; imagery is illustrative. No customer logos, certifications, testimonials, operating statistics, or environmental-performance results have been invented.
+This is the working executive homepage, not the proposed multi-page Next.js production release. There is no live CRM, authenticated portal, client database, or submission endpoint. Demonstration records are synthetic; illustrations are not proof of actual facilities or employees. No new certifications, operating statistics, customer endorsements, or environmental outcomes are asserted by this animation update.
 
-Legal content remains an iT1-review draft. The animation adds no analytics, cookies, identifiers, or remote dependencies. The eventual hosting provider may process access logs independently of this client code. Confirm hosting and the rest of the actual production data inventory before adopting a final policy.
+Legal documents remain drafts. iT1 must approve the operator/controller, domain, contacts, vendor inventory, retention, request routing, and final policies before production. See `docs/LEGAL_REVIEW.md` and the original project-foundation documents.
 
-## Source map
+## Browser tests
 
-- `index.html`, `styles.css`: original homepage structure and visual system.
-- `content.js`, `icons.js`, `app.js`: content, interface icons, forms, dialogs, portal examples, privacy logic.
-- `motion.js`, `motion.css`: additive interactive artwork and accessible controls.
-- `assets/`: local logo and illustrative photos.
-- `build.mjs`: dependency-free, allowlisted static build and offline export.
-- `serve.mjs`: localhost-only preview server.
-- `docs/`: original project foundation, legal review, presentation notes, motion specification, and deployment instructions.
+The website has no Playwright runtime dependency. CI installs pinned Python Playwright solely for verification. To run the same checks in a test environment with Playwright installed:
 
-Only the allowlisted `_site` output is published. Internal planning and review documents are excluded from the Pages artifact.
+```sh
+python tests/motion_smoke.py --url http://127.0.0.1:4173 --output /tmp/phoenix-qa
+```
 
-## Verification and next phase
-
-The animated standalone build passed 35 Playwright/Chromium checks, covering motion lifecycle, pause/resume, reduced-motion updates, dialogs, navigation, forms, portal filtering/export, legal documents, and layout widths of 320, 390, 768, 1280, 1440, and 1920 pixels. The Browser plugin was unavailable; managed Chromium blocked HTTP/file navigation, so tests rendered the bundled HTML with `set_content`. Native hosted persistence, other browser engines, and actual public deployment behavior require separate verification. These results are not an accessibility certification, a security audit, or a Core Web Vitals score.
-
-The planned Next.js/React/TypeScript production architecture remains documented in `docs/TECHNICAL_ARCHITECTURE.md`. Move this approved experience into that architecture when production implementation is authorized.
+The local assistant sandbox blocks browser URL navigation; its standalone-HTML test is not a substitute for the separate hosted CI test. Passing these checks is not a formal accessibility, security, privacy, or Core Web Vitals audit.
