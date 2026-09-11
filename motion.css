@@ -19,7 +19,6 @@
 .motion-control{position:absolute;top:18px;right:max(56px,calc((100% - 1280px)/2));z-index:3;display:inline-flex;align-items:center;gap:8px;min-height:36px;padding:8px 12px;border:1px solid #a6cbc138;border-radius:4px;color:#c3d4d0;background:#081519ad;font-size:10px;line-height:1.4;letter-spacing:.025em}
 .motion-control:hover{color:#fff;border-color:#68cfb7;background:#17372e}
 .motion-control:focus-visible{outline:3px solid #74f1d7;outline-offset:4px}
-.motion-control:disabled{cursor:default}
 .motion-hint{position:absolute;top:30px;right:max(214px,calc((100% - 980px)/2));z-index:1;pointer-events:none;font-size:9px;color:#92b3ac;letter-spacing:.055em}
 #process.ambient-scene{background:#0d2026}
 #process.ambient-scene .process-evidence{background:#0c222be0}
@@ -29,5 +28,5 @@
 @media(max-width:1100px) and (min-width:761px){.hero.ambient-scene .hero-visual{height:455px}.hero.ambient-scene .hero-art-caption{right:0;bottom:28px;border:1px solid #61baa630;background:#0a2025dc;padding:14px}.hero.ambient-scene .photo-frame{width:68px;height:56px;right:0;bottom:126px}.hero.ambient-scene .photo-line{bottom:8px}}
 @media(max-width:760px){.hero.ambient-scene .hero-grid{grid-template-columns:1fr;padding-top:84px;padding-bottom:30px;gap:15px;min-height:auto}.hero.ambient-scene .hero-visual{height:360px;pointer-events:none}.hero.ambient-scene .photo-frame{bottom:16px;width:72px;height:64px}.hero.ambient-scene .hero-art-caption{right:85px;bottom:16px;min-height:64px;left:0;padding:8px 8px 8px 12px;gap:9px}.hero.ambient-scene .hero-art-caption strong{font-size:11px}.hero.ambient-scene .hero-art-caption span{font-size:9px}.hero.ambient-scene .photo-line{bottom:-6px}.motion-control{right:20px;top:16px;min-height:40px}.motion-hint{top:32px;left:20px;right:auto;font-size:8px}.hero.ambient-scene .hero-bottom{background:#081519}.hero.ambient-scene::before{display:none}}
 @media(max-width:360px){.motion-hint{max-width:135px;top:25px}.hero.ambient-scene .hero-art-caption strong{font-size:10px}.hero.ambient-scene .hero-art-caption span{font-size:8px}}
-@media(prefers-reduced-motion:reduce){.motion-hint{display:none}}
+html[data-ambient-motion="reduced"] .motion-hint{display:none}
 @media print{.ambient-canvas,.motion-control,.motion-hint,.hero.ambient-scene::before{display:none!important}.hero.ambient-scene .hero-visual{display:none}}

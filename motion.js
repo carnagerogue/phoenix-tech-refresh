@@ -5,7 +5,7 @@
 'use strict';
 (() => {
   if (window.PTR_MOTION || !document.querySelector('.hero')) return;
-  const VERSION = '2.0.0';
+  const VERSION = '2.0.1';
   const TAU = Math.PI * 2;
   const reduced = matchMedia('(prefers-reduced-motion: reduce)');
   const coarse = matchMedia('(pointer: coarse)');
@@ -16,6 +16,10 @@
   const dot = (a, b) => a[0]*b[0]+a[1]*b[1]+a[2]*b[2];
   const interactive = 'a,button,input,select,textarea,dialog,summary,[role="tab"]';
   let time = 11, frame = 0, last = 0, draws = 0, userPaused = false;
+  // Respect the system default, while allowing an explicit choice on this page.
+  // Do not persist an override or carry it across a system-preference change.
+  let reducedOverride = false;
+  const motionEnabled = () => !userPaused && (!reduced.matches || reducedOverride);
   let modalOpen = Boolean(document.querySelector('dialog[open]'));
   let visiblePage = !document.hidden;
   const scenes = [], cleanups = [];
@@ -29,18 +33,21 @@
   control.className = 'motion-control'; control.type = 'button';
   const controlIcon = playing => `<svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">${playing ? '<path d="M7 5v10M13 5v10"/>' : '<path d="m7 4 8 6-8 6V4Z"/>'}</svg>`;
   function updateControl() {
-    const playing = !userPaused && !reduced.matches;
-    control.innerHTML = controlIcon(playing) + `<span>${reduced.matches ? 'Reduced motion' : playing ? 'Pause motion' : 'Resume motion'}</span>`;
-    control.disabled = reduced.matches;
+    const playing = motionEnabled();
+    const reducedDefault = reduced.matches && !reducedOverride;
+    control.innerHTML = controlIcon(playing) + `<span>${playing ? 'Pause animation' : reducedDefault ? 'Play animation' : 'Resume animation'}</span>`;
     control.setAttribute('aria-pressed', String(!playing));
-    control.setAttribute('aria-label', reduced.matches ? 'Ambient animation respects your reduced-motion preference' : playing ? 'Pause ambient background animation' : 'Resume ambient background animation');
-    document.documentElement.dataset.ambientMotion = reduced.matches ? 'reduced' : userPaused ? 'paused' : 'playing';
+    control.setAttribute('aria-label', playing ? 'Pause ambient background animation' : reducedDefault ? 'Play ambient background animation' : 'Resume ambient background animation');
+    control.title = reducedDefault ? 'Paused to respect your reduced-motion preference. Play animation for this page.' : '';
+    document.documentElement.dataset.ambientMotion = playing ? 'playing' : reducedDefault ? 'reduced' : 'paused';
   }
-  const allowed = () => !userPaused && !reduced.matches && visiblePage && !modalOpen;
+  const allowed = () => motionEnabled() && visiblePage && !modalOpen;
   function start() { if (!frame && allowed() && scenes.some(s=>s.visible)) {last=0;frame=requestAnimationFrame(tick);} }
   function stop() { cancelAnimationFrame(frame);frame=0;last=0; }
   function sync() { updateControl();if(allowed())start();else stop(); }
-  control.addEventListener('click',()=>{userPaused=!userPaused;sync();});
+  function pause(){userPaused=true;reducedOverride=false;sync();}
+  function resume(){userPaused=false;reducedOverride=reduced.matches;sync();}
+  control.addEventListener('click',()=>{if(motionEnabled())pause();else resume();});
 
   function rotation(p, angles) {
     const [cx,sx,cy,sy,cz,sz] = angles;
@@ -236,12 +243,12 @@
   const dialogs=new MutationObserver(()=>{modalOpen=Boolean(document.querySelector('dialog[open]'));sync();});
   document.querySelectorAll('dialog').forEach(d=>dialogs.observe(d,{attributes:true,attributeFilter:['open']}));
   on(document,'visibilitychange',()=>{visiblePage=!document.hidden;sync();});
-  on(reduced,'change',()=>{sync();scenes.forEach(s=>safeDraw(s,time));});
+  on(reduced,'change',()=>{reducedOverride=false;sync();scenes.forEach(s=>safeDraw(s,time));});
   on(coarse,'change',()=>scenes.forEach(resize));
   on(window,'pagehide',stop);on(window,'pageshow',sync);
   window.PTR_MOTION={
     version:VERSION,
-    pause(){userPaused=true;sync();},resume(){userPaused=false;sync();},
+    pause,resume,
     get status(){return {version:VERSION,paused:userPaused,reduced:reduced.matches,running:allowed()&&Boolean(frame),frames:draws,active:scenes.filter(s=>s.visible).length,scenes:scenes.map(s=>({kind:s.kind,frames:s.frames,visible:s.visible,failed:s.failed,pointer:[s.px,s.py],energy:s.energy}))};},
     destroy(){stop();observer?.disconnect();dialogs.disconnect();cleanups.forEach(fn=>fn());scenes.forEach(s=>{s.canvas.remove();s.host.classList.remove('ambient-scene');delete s.host.dataset.motionVersion;});control.remove();hint.remove();delete window.PTR_MOTION;}
   };

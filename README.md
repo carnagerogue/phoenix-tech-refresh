@@ -33,7 +33,7 @@ The original copy, content, illustrations, cookies, and legal review drafts rema
 - Local-only project summary with validation; email draft opens only on user action.
 - Working privacy preferences, no installed analytics or advertising vendors.
 - Privacy, Terms of Use, Cookie Policy, and Accessibility review drafts.
-- Original reflective 3D ribbon with pointer orbit, click/touch ripples, scroll response, pause/resume, reduced-motion support, and offscreen/dialog/hidden-tab suspension.
+- Original reflective 3D ribbon with pointer orbit, click/touch ripples, scroll response, pause/resume, reduced-motion defaults with an explicit Play animation option, and offscreen/dialog/hidden-tab suspension.
 
 ## Scope and launch gates
 
