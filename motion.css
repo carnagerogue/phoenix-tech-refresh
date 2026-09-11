@@ -1,0 +1,16 @@
+/* Additive motion layer: original layout, copy, imagery and controls remain intact. */
+.ambient-scene{position:relative;isolation:isolate;overflow:hidden}
+.ambient-canvas{position:absolute;inset:0;width:100%;height:100%;z-index:-2;pointer-events:none}
+.ambient-scene:before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;background:linear-gradient(90deg,rgba(12,23,29,.48),rgba(12,23,29,.12) 54%,rgba(12,23,29,0) 100%)}
+.hero.ambient-scene .hero-grid{position:relative}
+.hero.ambient-scene .hero-bottom{background:rgba(10,23,28,.65)}
+.hero.ambient-scene .photo-frame{outline:1px solid rgba(114,205,184,.20);box-shadow:0 22px 80px rgba(0,0,0,.15)}
+#process.ambient-scene:before{background:rgba(16,36,42,.36)}
+#contact.ambient-scene:before{background:linear-gradient(90deg,rgba(12,23,29,.70),rgba(12,23,29,.07))}
+.motion-control{position:absolute;top:17px;right:max(56px,calc((100% - 1280px)/2));z-index:3;display:inline-flex;align-items:center;gap:7px;min-height:32px;padding:6px 10px;border:1px solid rgba(166,203,193,.28);border-radius:3px;color:#bbd1cb;background:rgba(12,23,29,.75);font-size:10px;line-height:1.4;letter-spacing:.025em}
+.motion-control:hover{color:#fff;border-color:#66bda7;background:#162d2c}
+.motion-control:focus-visible{outline:3px solid #74f1d7;outline-offset:4px}
+.motion-control[disabled]{opacity:.8;cursor:default}
+@media(max-width:760px){.motion-control{right:24px;top:12px;min-height:40px}.hero.ambient-scene .hero-grid{padding-top:76px}.ambient-scene:before{background:rgba(12,23,29,.35)}}
+@media(prefers-reduced-motion:reduce){.ambient-canvas{opacity:.65}}
+@media print{.ambient-canvas,.motion-control,.ambient-scene:before{display:none!important}}
