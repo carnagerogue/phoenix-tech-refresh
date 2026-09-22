@@ -1,4 +1,4 @@
-# Branch-based Pages serves index.html directly. It now includes motion explicitly.
+# Branch-based Pages serves index.html directly. It loads the light design explicitly.
 # Do not turn internal review documents into public website pages.
 exclude:
   - docs
@@ -11,3 +11,7 @@ exclude:
   - dist
   - node_modules
   - .github
+  - motion.js
+  - motion.css
+  - journey.js
+  - journey.css

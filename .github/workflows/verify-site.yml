@@ -1,4 +1,4 @@
-name: Verify homepage and published motion
+name: Verify light homepage and published site
 on:
   push:
     branches: [main]
@@ -26,17 +26,17 @@ jobs:
         run: |
           node serve.mjs > "$RUNNER_TEMP/phoenix-server.log" 2>&1 &
           curl --retry 8 --retry-connrefused --retry-delay 1 --silent --fail http://127.0.0.1:4173 > /dev/null
-          python tests/motion_smoke.py --url http://127.0.0.1:4173 --output "$RUNNER_TEMP/phoenix-qa/local"
+          python tests/light_smoke.py --url http://127.0.0.1:4173 --output "$RUNNER_TEMP/phoenix-qa/local"
           python tests/redesign_smoke.py --url http://127.0.0.1:4173 --output "$RUNNER_TEMP/phoenix-qa/redesign"
-          python tests/journey_smoke.py --url http://127.0.0.1:4173 --output "$RUNNER_TEMP/phoenix-qa/journey"
+
       - name: Verify the actual published GitHub Pages website
         run: |
-          python tests/motion_smoke.py --url https://carnagerogue.github.io/phoenix-tech-refresh/ --wait-for-publish --output "$RUNNER_TEMP/phoenix-qa/published"
-          python tests/journey_smoke.py --url https://carnagerogue.github.io/phoenix-tech-refresh/ --output "$RUNNER_TEMP/phoenix-qa/published-journey"
+          python tests/light_smoke.py --url https://carnagerogue.github.io/phoenix-tech-refresh/ --wait-for-publish --output "$RUNNER_TEMP/phoenix-qa/published"
+
       - name: Save browser evidence
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
-          name: phoenix-motion-browser-evidence
+          name: phoenix-light-browser-evidence
           path: ${{ runner.temp }}/phoenix-qa
           retention-days: 7

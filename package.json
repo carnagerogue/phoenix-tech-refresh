@@ -1,14 +1,14 @@
 {
   "name": "phoenix-tech-refresh-executive-preview",
-  "version": "0.3.0",
+  "version": "6.0.0",
   "private": true,
-  "description": "Phoenix Tech Refresh executive website and original interactive Phoenix Flow background.",
+  "description": "Phoenix Tech Refresh light executive website preview",
   "type": "module",
   "scripts": {
     "start": "node build.mjs && node serve.mjs",
     "build": "node build.mjs",
     "standalone": "node build.mjs --standalone",
-    "check": "node --check app.js && node --check content.js && node --check icons.js && node --check motion.js && node --check design.js && node --check journey.js && node --check build.mjs && node --check serve.mjs"
+    "check": "node --check app.js && node --check content.js && node --check icons.js && node --check design.js && node --check light.js && node --check build.mjs && node --check serve.mjs"
   },
   "engines": {
     "node": ">=20"
