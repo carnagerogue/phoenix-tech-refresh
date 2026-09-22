@@ -11,8 +11,8 @@ await rm(out, { recursive: true, force: true });
 await mkdir(join(out, 'assets'), { recursive: true });
 await Promise.all(files.map(f => copyFile(join(root, f), join(out, f))));
 let html = await readFile(join(root, 'index.html'), 'utf8');
-// The light theme must be present; cinematic engines are intentionally retired.
-if (!html.includes('light.css?v=6.0.0') || !html.includes('light.js?v=6.0.0')) throw new Error('Light theme assets are missing');
+// The light cinematic theme must be present; legacy canvas engines stay retired.
+if (!html.includes('light.css?v=6.1.0') || !html.includes('light.js?v=6.1.0')) throw new Error('Light theme assets are missing');
 if (!html.includes('noindex,nofollow')) throw new Error('Executive preview must retain noindex.');
 await writeFile(join(out, 'index.html'), html);
 await writeFile(join(out, '.nojekyll'), '');
