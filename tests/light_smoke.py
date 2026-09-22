@@ -13,11 +13,11 @@ with sync_playwright() as playwright:
     page.on('pageerror',lambda e:errors.append(str(e)))
     try:
         for attempt in range(25 if a.wait_for_publish else 1):
-            url=a.url.split('#')[0].split('?')[0]+'?v=6.1.0&verify='+str(attempt)
+            url=a.url.split('#')[0].split('?')[0]+'?v=7.0.0&verify='+str(attempt)
             response=page.goto(url,wait_until='networkidle')
-            if page.locator('body').get_attribute('data-design-version')=='6.1.0':break
+            if page.locator('body').get_attribute('data-design-version')=='7.0.0':break
             time.sleep(10)
-        check('Published light release loads',response.status==200 and page.locator('body').get_attribute('data-design-version')=='6.1.0')
+        check('Published light release loads',response.status==200 and page.locator('body').get_attribute('data-design-version')=='7.0.0')
         page.locator('#reject-cookies').click();page.wait_for_timeout(1200)
         check('Bright hero and header',page.locator('.hero').evaluate('e=>getComputedStyle(e).backgroundColor')=='rgb(255, 255, 255)' and page.locator('.site-header').evaluate('e=>getComputedStyle(e).color')=='rgb(23, 46, 50)')
         check('No galaxy or cinematic canvases',page.locator('canvas,.cinema-section,.journey-nav').count()==0)
@@ -32,7 +32,7 @@ with sync_playwright() as playwright:
         check('Keyboard resumes cinematic motion',page.locator('.gentle-motion').get_attribute('aria-pressed')=='false')
         page.emulate_media(reduced_motion='reduce')
         check('Requested cinematic motion stays available with OS reduced motion',image.evaluate('e=>getComputedStyle(e).animationName')!='none' and not page.locator('.gentle-motion').is_disabled())
-        check('Equipment layers move independently',page.locator('.hero-equipment-left img').evaluate('e=>getComputedStyle(e).animationName')!=image.evaluate('e=>getComputedStyle(e).animationName'))
+        check('Cinematic studio imagery is installed','studio-hero' in image.evaluate('i=>i.currentSrc') and page.locator('.hero-cue').is_visible())
         page.get_by_role('button',name='Pause motion',exact=True).click()
         check('Manual pause works with OS reduced motion',image.evaluate('e=>getComputedStyle(e).animationPlayState')=='paused')
         page.reload(wait_until='networkidle')
@@ -88,7 +88,7 @@ with sync_playwright() as playwright:
             check(f'Hero text fits at {width}px',page.locator('h1').evaluate('e=>e.scrollWidth<=e.clientWidth+1'))
             if width==390:
                 page.screenshot(path=str(out/'mobile.png'))
-                check('Mobile equipment source is the complete product photo','equipment-light' in image.evaluate('i=>i.currentSrc'))
+                check('Mobile shows the complete studio product photo','studio-hero' in image.evaluate('i=>i.currentSrc'))
                 page.get_by_role('button',name='Open navigation',exact=True).click()
                 page.locator('#mega-menu a[href="#industries"]').click()
                 check('Mobile menu routes and closes',page.url.endswith('#industries') and not page.locator('#mega-menu').is_visible())

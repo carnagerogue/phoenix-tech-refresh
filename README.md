@@ -1,10 +1,10 @@
 # Phoenix Tech Refresh
 
-Executive-review website for **Phoenix Tech Refresh, an iT1 company**. Release **6.1.0** brings cinematic movement to the bright, equipment-led design inspired by the owner's Workwize reference.
+Executive-review website for **Phoenix Tech Refresh, an iT1 company**. Release **7.0.0** adds a coordinated studio art direction to the bright cinematic website: a sculptural equipment hero, editorial typography, open service navigation, and distinct evidence and lifecycle sections.
 
 ## Website and publishing
 
-https://carnagerogue.github.io/phoenix-tech-refresh/?v=6.1.0#top
+https://carnagerogue.github.io/phoenix-tech-refresh/?v=7.0.0#top
 
 GitHub Pages publishes `main` directly. The root homepage and static build load the same versioned light theme. Check the Pages deployment and **Verify light homepage and published site** workflow before treating a commit as live. The manual alternate publisher should not run concurrently.
 
@@ -27,7 +27,8 @@ The server runs at http://127.0.0.1:4173. The standalone preview is `dist/Phoeni
 
 - White and pale-mint surfaces, teal actions, locally hosted Manrope typography.
 - Physical equipment imagery replaces the particle logo and geometric chapters. No canvas engines, pinned scroll scenes, or pointer tracking load on the homepage.
-- Independently moving equipment, native-scroll camera shifts, a slow forest pan, and a floating portal preview keep visible scenes alive. No scroll hijacking.
+- A cinematic studio-camera move and slow light pass animate the product tableau. Native-scroll camera shifts, a forest pan, and a floating portal preview keep visible scenes alive without scroll hijacking.
+- New optimized studio imagery totals under100KB. All text, menus, forms and service controls remain real HTML; generated concepts are not shipped as interface screenshots.
 - Cinematic motion plays by default, including under OS reduced-motion settings, as explicitly requested by the owner. A shared pause is always available in the hero or a floating control; the visitor's choice persists for the session. Ordinary interface transitions still respect OS preferences. Offscreen scenes, dialogs and hidden tabs suspend animation.
 - The lifecycle walkthrough advances every 6.5 visible seconds. Its own pause and manual mouse/keyboard tab selection stop autoplay; global pause also freezes its clock.
 - Eight-service explorer, lifecycle tabs, portal demonstration, reuse, people, industries, resources, FAQ, and project inquiry remain functional.
@@ -53,4 +54,4 @@ python tests/light_smoke.py --url http://127.0.0.1:4173 --output /tmp/phoenix-li
 python tests/redesign_smoke.py --url http://127.0.0.1:4173 --output /tmp/phoenix-flow-qa
 ```
 
-The light suite also runs against the actual published Pages URL with `--wait-for-publish`. It covers theme visibility, physical imagery, independent animation, persistent pause, reduced-motion operation, lifecycle playback, evidence notices, compliance controls, mobile layouts and footer access. The existing flow suite covers service browsing, inquiry validation/download, lifecycle navigation, portal filtering/export, resources and mobile menus. These are functional checks, not a formal accessibility or security audit.
+The light suite also runs against the actual published Pages URL with `--wait-for-publish`. It covers theme visibility, physical imagery, studio imagery and animation, persistent pause, reduced-motion operation, lifecycle playback, evidence notices, compliance controls, mobile layouts and footer access. The existing flow suite covers service browsing, inquiry validation/download, lifecycle navigation, portal filtering/export, resources and mobile menus. These are functional checks, not a formal accessibility or security audit.

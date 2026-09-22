@@ -1,4 +1,4 @@
-/* Daylight cinema: independent equipment, native-scroll camera, and a guided lifecycle. */
+/* Daylight cinema: sculptural equipment, native-scroll camera, and a guided lifecycle. */
 'use strict';
 (() => {
   const root = document.documentElement;
@@ -10,11 +10,6 @@
   // shares a manual pause, including on devices requesting reduced OS motion.
   let paused = false;
   try { paused = sessionStorage.getItem('phoenix-motion') === 'paused'; } catch {}
-  const equipment = hero.querySelector('.hero-equipment');
-  const left = equipment.cloneNode(true);
-  left.classList.add('hero-equipment-left');
-  left.querySelector('img').removeAttribute('fetchpriority');
-  equipment.after(left);
   const floating = document.createElement('button');
   floating.className = 'cinema-control';
   floating.type = 'button';

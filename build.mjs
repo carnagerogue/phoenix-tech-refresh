@@ -6,13 +6,13 @@ import { join } from 'node:path';
 const root = fileURLToPath(new URL('.', import.meta.url));
 const out = join(root, '_site');
 const files = ['styles.css', 'icons.js', 'content.js', 'app.js', 'design.css', 'design.js', 'light.css', 'light.js',
-  'assets/hero-light.webp', 'assets/equipment-light.webp', 'assets/manrope.ttf', 'assets/manrope-OFL.txt', 'assets/hardware.webp', 'assets/security.webp', 'assets/forest-river.webp', 'assets/logo.webp', 'assets/hero.webp', 'assets/forest.webp'];
+  'assets/studio-hero.webp', 'assets/studio-equipment.webp', 'assets/hero-light.webp', 'assets/equipment-light.webp', 'assets/manrope.ttf', 'assets/manrope-OFL.txt', 'assets/hardware.webp', 'assets/security.webp', 'assets/forest-river.webp', 'assets/logo.webp', 'assets/hero.webp', 'assets/forest.webp'];
 await rm(out, { recursive: true, force: true });
 await mkdir(join(out, 'assets'), { recursive: true });
 await Promise.all(files.map(f => copyFile(join(root, f), join(out, f))));
 let html = await readFile(join(root, 'index.html'), 'utf8');
 // The light cinematic theme must be present; legacy canvas engines stay retired.
-if (!html.includes('light.css?v=6.1.0') || !html.includes('light.js?v=6.1.0')) throw new Error('Light theme assets are missing');
+if (!html.includes('light.css?v=7.0.0') || !html.includes('light.js?v=7.0.0')) throw new Error('Light theme assets are missing');
 if (!html.includes('noindex,nofollow')) throw new Error('Executive preview must retain noindex.');
 await writeFile(join(out, 'index.html'), html);
 await writeFile(join(out, '.nojekyll'), '');
